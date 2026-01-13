@@ -1,119 +1,179 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>健康记录（保存验证版）</title>
-<style>
-body{
- font-family:-apple-system,"PingFang SC";
- margin:0;display:flex;height:100vh;
- background:#f6f7fb;
-}
-aside{
- width:220px;padding:16px;background:#fff;
- box-shadow:4px 0 20px rgba(0,0,0,.08);
-}
-main{flex:1;padding:20px}
-button{
- width:100%;padding:10px;margin-top:8px;
- border:none;border-radius:10px;
- background:#ff8fb1;color:#fff;font-size:16px;
-}
-.card{
- background:#fff;border-radius:16px;
- padding:16px;margin-bottom:16px;
-}
-input{width:100%;padding:10px;margin-top:8px}
-.member{margin-top:8px;cursor:pointer}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CoupleFit | 夫妻健康看板</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .ios-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 20px; }
+        .active-h { border-bottom: 4px solid #3b82f6; color: #3b82f6; }
+        .active-w { border-bottom: 4px solid #ec4899; color: #ec4899; }
+        body { background-color: #f2f2f7; -webkit-tap-highlight-color: transparent; }
+    </style>
 </head>
+<body class="p-4 md:p-10">
+    <div id="app" class="max-w-5xl mx-auto">
+        <div class="flex bg-white rounded-2xl mb-6 overflow-hidden shadow-sm">
+            <button onclick="switchUser('husband')" id="btn-h" class="flex-1 py-4 font-bold text-lg transition-all">👨‍🦱 丈夫</button>
+            <button onclick="switchUser('wife')" id="btn-w" class="flex-1 py-4 font-bold text-lg transition-all">👩‍🦰 妻子</button>
+        </div>
 
-<body>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="md:col-span-1 space-y-6">
+                <div class="ios-card p-6 shadow-sm border border-white">
+                    <h3 class="text-gray-500 text-sm mb-1">当前体重 (kg)</h3>
+                    <div id="cur-weight" class="text-5xl font-black text-slate-800 mb-4">0.0</div>
+                    <div class="flex gap-2">
+                        <input type="number" id="input-weight" step="0.1" placeholder="0.0" class="w-full bg-gray-100 p-3 rounded-xl outline-none focus:ring-2 ring-blue-400">
+                        <button onclick="saveWeight()" class="bg-slate-800 text-white px-6 rounded-xl font-bold">记</button>
+                    </div>
+                </div>
 
-<aside>
-<button onclick="showAdd()">添加成员</button>
-<div id="members"></div>
-</aside>
+                <div class="ios-card p-6 shadow-sm border border-white">
+                    <h3 class="text-gray-500 text-sm mb-4">今日热量收支</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">摄入 (饮食)</span>
+                            <span id="cal-in" class="font-bold text-lg">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-500 font-medium">消耗 (运动)</span>
+                            <span id="cal-out" class="font-bold text-lg">0</span>
+                        </div>
+                        <div class="border-t pt-2 flex justify-between items-center">
+                            <span class="text-slate-400">净值</span>
+                            <span id="cal-net" class="font-black text-xl text-slate-700">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<main>
-<div id="content"></div>
-</main>
+            <div class="md:col-span-2 space-y-6">
+                <div class="ios-card p-6 shadow-sm border border-white h-64">
+                    <canvas id="weightChart"></canvas>
+                </div>
 
-<script>
-/* ===== 数据 ===== */
-let store = JSON.parse(localStorage.getItem("health_save_test")||"{}");
-let currentUser = null;
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="showLogModal('food')" class="bg-orange-100 text-orange-600 p-4 rounded-2xl font-bold flex flex-col items-center">
+                        <i data-lucide="utensils" class="mb-1"></i> 记饮食
+                    </button>
+                    <button onclick="showLogModal('sport')" class="bg-green-100 text-green-600 p-4 rounded-2xl font-bold flex flex-col items-center">
+                        <i data-lucide="dumbbell" class="mb-1"></i> 记运动
+                    </button>
+                </div>
 
-function save(){
- localStorage.setItem("health_save_test",JSON.stringify(store));
-}
+                <div id="log-list" class="space-y-2">
+                    </div>
+            </div>
+        </div>
+    </div>
 
-/* ===== 工具：安全日期 ===== */
-function getDate(){
- return document.getElementById("date")?.value
-   || new Date().toISOString().slice(0,10);
-}
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm">
+            <h3 id="modal-title" class="text-xl font-bold mb-4">记录</h3>
+            <input type="text" id="log-name" placeholder="名称 (如: 苹果/跑步)" class="w-full bg-gray-100 p-4 rounded-xl mb-4 outline-none">
+            <input type="number" id="log-cal" placeholder="卡路里 (kcal)" class="w-full bg-gray-100 p-4 rounded-xl mb-6 outline-none">
+            <div class="flex gap-4">
+                <button onclick="closeModal()" class="flex-1 py-4 text-gray-500 font-bold">取消</button>
+                <button onclick="confirmLog()" class="flex-1 py-4 bg-slate-800 text-white rounded-xl font-bold">确定保存</button>
+            </div>
+        </div>
+    </div>
 
-/* ===== 成员 ===== */
-function renderMembers(){
- members.innerHTML="";
- Object.keys(store).forEach(n=>{
-  const d=document.createElement("div");
-  d.className="member";
-  d.innerText=n;
-  d.onclick=()=>open(n);
-  members.appendChild(d);
- });
-}
-renderMembers();
+    <script>
+        // --- 数据管理 ---
+        let state = {
+            user: 'husband',
+            logs: { husband: JSON.parse(localStorage.getItem('fit_h') || '{"w":[], "l":[]}'), 
+                    wife: JSON.parse(localStorage.getItem('fit_w') || '{"w":[], "l":[]}') }
+        };
 
-function showAdd(){
- content.innerHTML=`
- <div class="card">
-  <h2>添加成员</h2>
-  <input id="name" placeholder="成员名">
-  <button onclick="addMember()">保存</button>
- </div>`;
-}
+        function switchUser(u) {
+            state.user = u;
+            document.getElementById('btn-h').className = u === 'husband' ? 'flex-1 py-4 font-bold text-lg active-h' : 'flex-1 py-4 font-bold text-lg text-gray-300';
+            document.getElementById('btn-w').className = u === 'wife' ? 'flex-1 py-4 font-bold text-lg active-w' : 'flex-1 py-4 font-bold text-lg text-gray-300';
+            render();
+        }
 
-function addMember(){
- const n=name.value;
- if(!n)return;
- store[n]={records:{}};
- save();
- renderMembers();
- open(n);
-}
+        function saveWeight() {
+            const val = parseFloat(document.getElementById('input-weight').value);
+            if(!val) return;
+            state.logs[state.user].w.unshift({ val, date: new Date().toLocaleDateString(), ts: Date.now() });
+            sync();
+        }
 
-/* ===== 打开成员 ===== */
-function open(name){
- currentUser=name;
- renderWeight();
-}
+        let currentModalType = '';
+        function showLogModal(type) {
+            currentModalType = type;
+            document.getElementById('modal-title').innerText = type === 'food' ? '记录饮食' : '记录运动';
+            document.getElementById('modal').classList.remove('hidden');
+        }
 
-/* ===== 体重 ===== */
-function renderWeight(){
- content.innerHTML=`
- <div class="card">
-  <h2>${currentUser} · 体重记录</h2>
-  <input type="date" id="date">
-  <input id="w" placeholder="体重 kg">
-  <button onclick="saveWeight()">保存体重</button>
- </div>`;
-}
+        function confirmLog() {
+            const name = document.getElementById('log-name').value;
+            const cal = parseInt(document.getElementById('log-cal').value);
+            if(!name || !cal) return;
+            state.logs[state.user].l.unshift({ type: currentModalType, name, cal, date: new Date().toLocaleDateString(), ts: Date.now() });
+            closeModal();
+            sync();
+        }
 
-function saveWeight(){
- const d=getDate();
- store[currentUser].records[d]={weight:+w.value};
- save();
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
- alert(
-  "已保存 ✅\n\n当前数据：\n"+
-  JSON.stringify(store,null,2)
- );
-}
-</script>
+        function sync() {
+            localStorage.setItem(`fit_${state.user === 'husband' ? 'h' : 'w'}`, JSON.stringify(state.logs[state.user]));
+            render();
+        }
 
+        // --- 渲染逻辑 ---
+        let chart = null;
+        function render() {
+            const data = state.logs[state.user];
+            // 更新体重显示
+            document.getElementById('cur-weight').innerText = data.w[0]?.val || '0.0';
+            
+            // 更新卡路里
+            const today = new Date().toLocaleDateString();
+            const todayLogs = data.l.filter(x => x.date === today);
+            const inVal = todayLogs.filter(x => x.type === 'food').reduce((a,b)=>a+b.cal, 0);
+            const outVal = todayLogs.filter(x => x.type === 'sport').reduce((a,b)=>a+b.cal, 0);
+            document.getElementById('cal-in').innerText = inVal;
+            document.getElementById('cal-out').innerText = outVal;
+            document.getElementById('cal-net').innerText = inVal - outVal;
+
+            // 更新列表 (最近5条)
+            document.getElementById('log-list').innerHTML = data.l.slice(0,5).map(x => `
+                <div class="bg-white/60 p-3 rounded-xl flex justify-between text-sm shadow-sm">
+                    <span>${x.type==='food'?'🍎':'🔥'} ${x.name}</span>
+                    <span class="font-bold">${x.type==='food'?'+':'-'}${x.cal} kcal</span>
+                </div>
+            `).join('');
+
+            updateChart(data.w);
+        }
+
+        function updateChart(weightData) {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            const sorted = [...weightData].reverse().slice(-7);
+            const chartData = {
+                labels: sorted.map(d => d.date.substring(5)),
+                datasets: [{
+                    data: sorted.map(d => d.val),
+                    borderColor: state.user === 'husband' ? '#3b82f6' : '#ec4899',
+                    tension: 0.4,
+                    fill: false
+                }]
+            };
+            if(chart) chart.destroy();
+            chart = new Chart(ctx, { type: 'line', data: chartData, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+
+        window.onload = () => { switchUser('husband'); lucide.createIcons(); };
+    </script>
 </body>
 </html>
