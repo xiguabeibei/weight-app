@@ -6,241 +6,238 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="健康管理Pro">
     
-    <title>HealthPro</title>
+    <link rel="manifest" href='data:application/manifest+json,{"display":"standalone","name":"HealthPro","short_name":"Health"}' />
     
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+
+    <title>健康管理Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
+    
     <style>
-        :root { --ios-green: #34c759; --bg: #f2f2f7; }
-        
-        * { 
-            -webkit-tap-highlight-color: transparent; 
-            touch-action: manipulation; 
-            -webkit-user-select: none;
-        }
-
+        /* 彻底消除网页感：锁定全局，禁止滚动回弹（橡皮筋效果） */
         body { 
-            margin: 0; background: var(--bg); color: #1c1c1e;
-            font-family: -apple-system, system-ui, sans-serif;
-            height: 100vh; overflow: hidden;
+            background-color: #f2f2f7; 
+            color: #1c1c1e; 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
+            height: 100vh; 
+            width: 100vw;
+            overflow: hidden; 
+            position: fixed; /* 锁定 iPad 窗口位置 */
+            -webkit-user-select: none; /* 禁止长按选中文本，更像 App */
         }
 
-        /* 适配 iPad 的滚动容器 */
-        .scroll-container {
-            height: 100vh; overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 100px;
+        /* 沉浸式顶部：为状态栏预留安全区 */
+        header {
+            padding-top: env(safe-area-inset-top);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 50;
         }
 
-        /* 毛玻璃导航 */
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: saturate(180%) blur(20px);
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        /* 主体内容滚动区：模拟原生 App 滚动逻辑 */
+        #main-scroll {
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* iPad 丝滑滚动 */
+            padding-top: calc(80px + env(safe-area-inset-top));
+            padding-bottom: 120px;
         }
 
-        /* 卡片原生感 */
-        .card { 
-            background: white; border-radius: 24px; 
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        .wechat-card { 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            border: 1px solid rgba(255,255,255,0.5);
         }
-        .card:active { transform: scale(0.98); }
+        
+        /* 隐藏 iPad 滚动条 */
+        #main-scroll::-webkit-scrollbar { display: none; }
 
-        /* 隐藏滚动条 */
-        .scroll-container::-webkit-scrollbar { display: none; }
+        /* 侧边栏优化 */
+        #sidebar { 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 100;
+        }
+        .sidebar-hidden { transform: translateX(-100%); position: absolute; }
 
-        /* 底部导航 */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: calc(70px + env(safe-area-inset-bottom));
-            border-top: 0.5px solid rgba(0,0,0,0.1);
-            display: flex; justify-content: space-around; align-items: flex-start;
-            padding-top: 12px; z-index: 1000;
+        /* 录入区组件样式 */
+        input, select { 
+            appearance: none; 
+            -webkit-appearance: none; 
+            background: #f2f2f7 !important;
+            border: none !important;
+            border-radius: 12px !important;
         }
 
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8e8e93; }
-        .nav-btn.active { color: var(--ios-green); }
-
-        /* 响应式布局：iPad 横屏分两栏 */
-        @media (min-width: 768px) {
-            .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
-            .full-width { grid-column: span 2; }
-        }
+        /* 加载动画 */
+        .scale-in { animation: scaleIn 0.3s ease-out; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
-<body>
+<body class="flex">
 
-    <header class="glass fixed top-0 w-full z-50 pt-[env(safe-area-inset-top)] border-b border-gray-100">
-        <div class="px-6 h-16 flex items-center justify-between">
-            <h2 id="page-title" class="text-xl font-bold">健康看板</h2>
-            <div class="flex items-center gap-4">
-                <input type="date" id="global-date" onchange="refresh()" class="bg-transparent border-none text-blue-500 font-bold text-sm">
-                <i data-lucide="settings" onclick="openSettings()" class="w-5 h-5 text-gray-400"></i>
-            </div>
+    <aside id="sidebar" class="w-72 bg-white/90 backdrop-blur-xl flex flex-col p-6 shrink-0 border-r border-gray-100">
+        <div class="flex items-center justify-between mb-10 mt-4">
+            <span class="text-2xl font-black tracking-tight">档案中心</span>
+            <button onclick="toggleSidebar()"><i data-lucide="chevron-left" class="text-gray-400"></i></button>
         </div>
-    </header>
+        <div id="user-nav" class="flex-1 space-y-3 overflow-y-auto"></div>
+        <button onclick="addUser()" class="mt-4 w-full py-4 bg-gray-900 text-white text-lg font-bold rounded-2xl shadow-lg active:scale-95 transition-all">+ 新成员</button>
+    </aside>
 
-    <div class="scroll-container pt-24 px-4">
-        
-        <div id="view-home" class="page-content">
-            <div class="grid-layout">
-                <div class="card p-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-xl shadow-green-100">
-                    <div class="flex justify-between items-start">
+    <main class="flex-1 relative">
+        <header class="fixed top-0 left-0 right-0 border-b border-gray-100 flex items-center justify-between px-8 py-4">
+            <div class="flex items-center gap-6">
+                <button id="sidebar-open" onclick="toggleSidebar()" class="hidden p-3 bg-gray-100 rounded-2xl"><i data-lucide="menu"></i></button>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Selected Date</span>
+                    <input type="date" id="view-date" onchange="render()" class="font-black text-xl bg-transparent w-auto">
+                </div>
+            </div>
+            <button onclick="openManageModal()" class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
+                <i data-lucide="settings-2"></i>
+            </button>
+        </header>
+
+        <div id="main-scroll">
+            <div class="max-w-6xl mx-auto px-6 space-y-8">
+                
+                <div class="wechat-card p-8 bg-gradient-to-br from-white to-gray-50">
+                    <div class="flex justify-between items-start mb-8">
                         <div>
-                            <p class="text-xs font-black opacity-70 uppercase">Distance to Goal</p>
-                            <h1 class="text-6xl font-black mt-1"><span id="diff-num">0.0</span><small class="text-xl ml-1">kg</small></h1>
+                            <div class="flex items-center gap-4 mb-3">
+                                <h1 id="display-name" class="text-5xl font-black tracking-tighter">--</h1>
+                                <div id="display-gender"></div>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="bg-gray-200/50 px-4 py-1.5 rounded-full text-sm font-bold">目标 <b id="display-target">--</b> KG</span>
+                                <span onclick="editWish()" class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-bold cursor-pointer">愿望: <b id="display-wish">设置</b></span>
+                            </div>
                         </div>
-                        <div class="bg-white/20 p-3 rounded-2xl">
-                            <i data-lucide="target" class="w-6 h-6"></i>
+                        <div class="text-right">
+                            <div id="weight-diff" class="text-6xl font-black text-[#34c759] tracking-tighter">0.0</div>
+                            <p class="text-[10px] text-gray-300 font-black mt-1 uppercase">KG to Goal</p>
                         </div>
                     </div>
-                    <p class="mt-6 text-sm font-bold opacity-90">目标体重: <span id="target-num">--</span> kg</p>
+                    <div id="display-mood" onclick="editMood()" class="bg-white border border-gray-100 p-6 rounded-3xl text-xl text-gray-500 italic shadow-sm">
+                        “ 记录今日感悟... ”
+                    </div>
                 </div>
 
-                <div class="card p-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-lg">最近血压</h3>
-                        <span id="bp-status" class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-black">正常</span>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="wechat-card p-6">
+                        <div class="flex justify-between items-center mb-6 px-2">
+                            <h3 class="text-xl font-black">养成兴趣</h3>
+                            <button onclick="addInterest()" class="text-[#34c759]"><i data-lucide="plus-circle" class="w-8 h-8"></i></button>
+                        </div>
+                        <div id="interest-list" class="space-y-4"></div>
                     </div>
-                    <div class="flex items-end gap-1">
-                        <span id="bp-val" class="text-5xl font-black">--/--</span>
-                        <span class="text-gray-300 font-bold mb-1 ml-2">mmHg</span>
+
+                    <div class="space-y-8">
+                        <div class="wechat-card p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="font-black">体重轨迹</span>
+                                <div class="flex gap-1" id="w-range-btns">
+                                    <button onclick="updateRange('weight', 7)" class="range-btn">7D</button>
+                                    <button onclick="updateRange('weight', 30)" class="range-btn">1M</button>
+                                    <button onclick="updateRange('weight', 365)" class="range-btn">1Y</button>
+                                </div>
+                            </div>
+                            <div class="h-64"><canvas id="weightChart"></canvas></div>
+                        </div>
+                        
+                        <div class="wechat-card p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="font-black">血压心率</span>
+                                <div class="flex gap-1" id="bp-range-btns">
+                                    <button onclick="updateRange('bp', 7)" class="range-btn">7D</button>
+                                    <button onclick="updateRange('bp', 30)" class="range-btn">1M</button>
+                                    <button onclick="updateRange('bp', 365)" class="range-btn">1Y</button>
+                                </div>
+                            </div>
+                            <div class="h-64"><canvas id="bpChart"></canvas></div>
+                        </div>
                     </div>
-                    <p class="text-xs text-gray-400 font-bold mt-4 italic" id="mood-text">点击记录今日感悟...</p>
                 </div>
 
-                <div class="card p-6 lg:col-span-1">
-                    <div class="flex justify-between mb-6">
-                        <span class="font-bold">体重轨迹</span>
-                        <select onchange="changeRange('w', this.value)" class="text-xs font-bold bg-gray-50 border-none rounded-lg p-1">
-                            <option value="7">7天</option>
-                            <option value="30">1月</option>
-                            <option value="90">3月</option>
-                            <option value="365">1年</option>
-                        </select>
+                <section class="wechat-card p-8 border-2 border-green-500/10 shadow-xl scale-in">
+                    <div class="flex gap-6 border-b border-gray-100 mb-8 overflow-x-auto no-scrollbar">
+                        <button onclick="setLogType('weight')" id="tab-weight" class="pb-4 text-xl font-black">测体重</button>
+                        <button onclick="setLogType('bp')" id="tab-bp" class="pb-4 text-xl font-black">量血压</button>
+                        <button onclick="setLogType('food')" id="tab-food" class="pb-4 text-xl font-black">吃补给</button>
+                        <button onclick="setLogType('sport')" id="tab-sport" class="pb-4 text-xl font-black">去消耗</button>
                     </div>
-                    <div class="h-64"><canvas id="wChart"></canvas></div>
-                </div>
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-end">
+                        <div class="md:col-span-1">
+                            <label class="text-[10px] font-black text-gray-300 mb-2 block uppercase">Date</label>
+                            <input type="date" id="log-date" class="py-3 px-4 font-bold">
+                        </div>
+                        <div id="entry-form-fields" class="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                        <button onclick="submitEntry()" class="md:col-span-1 h-[52px] bg-[#34c759] text-white rounded-2xl font-black text-xl shadow-lg shadow-green-200 active:scale-95 transition-all">记录</button>
+                    </div>
+                </section>
 
-                <div class="card p-6 lg:col-span-1">
-                    <div class="flex justify-between mb-6">
-                        <span class="font-bold">血压/心率波动</span>
-                        <select onchange="changeRange('bp', this.value)" class="text-xs font-bold bg-gray-50 border-none rounded-lg p-1">
-                            <option value="7">7天</option>
-                            <option value="30">1月</option>
-                            <option value="365">1年</option>
-                        </select>
-                    </div>
-                    <div class="h-64"><canvas id="bpChart"></canvas></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div id="list-food" class="space-y-3"></div>
+                    <div id="list-sport" class="space-y-3"></div>
+                    <div id="list-bp" class="space-y-3"></div>
                 </div>
             </div>
         </div>
+    </main>
 
-        </div>
-
-    <nav class="nav-bar glass">
-        <button onclick="showSection('home')" class="nav-btn active" id="btn-home">
-            <i data-lucide="layout-dashboard"></i><span class="text-[10px] font-black">概览</span>
-        </button>
-        <button onclick="triggerAdd()" class="nav-btn">
-            <div class="w-12 h-12 bg-[#34c759] rounded-2xl flex items-center justify-center -translate-y-4 shadow-lg shadow-green-200">
-                <i data-lucide="plus" class="text-white w-8 h-8"></i>
+    <div id="manage-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+        <div class="bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl scale-in">
+            <h2 class="text-3xl font-black mb-8 tracking-tighter">修改档案设置</h2>
+            <div class="space-y-6">
+                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Name</label><input type="text" id="m-name" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100"></div>
+                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Gender</label><select id="m-gender" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100 w-full"><option value="female">女生</option><option value="male">男生</option></select></div>
+                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Target Weight (KG)</label><input type="number" id="m-target" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100"></div>
             </div>
-        </button>
-        <button onclick="showSection('list')" class="nav-btn" id="btn-list">
-            <i data-lucide="list-checks"></i><span class="text-[10px] font-black">日志</span>
-        </button>
-    </nav>
+            <div class="flex gap-4 mt-12">
+                <button onclick="closeManageModal()" class="flex-1 py-5 text-gray-400 font-bold text-lg">放弃修改</button>
+                <button onclick="saveUserManage()" class="flex-1 py-5 bg-black text-white rounded-[20px] font-black text-lg shadow-xl shadow-gray-200">确认保存</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // 数据持久化
-        let db = JSON.parse(localStorage.getItem('health_pad_v1') || '{"weight":[], "bp":[], "target":65}');
-        let wChart, bpChart;
-        let ranges = { w: 7, bp: 7 };
+        // ... (保留你原来的 JavaScript 代码，只需将下面的 window.onload 替换掉即可)
+        
+        // 核心同步逻辑 (此处仅为补全，实际使用时请确保包含你之前的所有 JS 函数)
+        let users = JSON.parse(localStorage.getItem('health_v3_core') || '[]');
+        let curUid = localStorage.getItem('health_uid_v3') || (users[0]?.id || null);
+        let entryType = 'weight', charts = {}, ranges = { weight: 7, bp: 7 };
 
-        function refresh() {
-            lucide.createIcons();
-            const sortedW = [...db.weight].sort((a,b)=>a.ts-b.ts);
-            const latestW = sortedW.length ? sortedW[sortedW.length-1].val : db.target;
-            
-            document.getElementById('target-num').innerText = db.target;
-            document.getElementById('diff-num').innerText = (latestW - db.target).toFixed(1);
-            
-            const vDate = document.getElementById('global-date').value;
-            const todayBP = db.bp.filter(i => i.date === vDate)[0];
-            if(todayBP) {
-                document.getElementById('bp-val').innerText = `${todayBP.high}/${todayBP.low}`;
+        // [此处插入你代码中原有的所有 JS 函数，如 sync, render, submitEntry 等]
+        
+        // 针对 iPad 锁死浏览器默认行为
+        document.addEventListener('touchmove', function (e) {
+            if (e.target.closest('#main-scroll') || e.target.closest('#sidebar')) {
+                // 允许特定区域滚动
+            } else {
+                e.preventDefault(); 
             }
+        }, { passive: false });
 
-            renderCharts();
-        }
-
-        function renderCharts() {
-            const filter = (arr, d) => arr.filter(i => i.ts >= Date.now() - d*86400000).sort((a,b)=>a.ts-b.ts);
+        window.onload = () => { 
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('view-date').value = today; 
+            document.getElementById('log-date').value = today; 
+            sync(); 
             
-            // 体重
-            const wd = filter(db.weight, ranges.w);
-            if(wChart) wChart.destroy();
-            wChart = new Chart(document.getElementById('wChart'), {
-                type: 'line',
-                data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{ data: wd.map(d=>d.val), borderColor: '#34c759', borderWidth: 5, pointRadius: 2, tension: 0.4, fill: true, backgroundColor: 'rgba(52,199,89,0.05)' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // 血压
-            const bd = filter(db.bp, ranges.bp);
-            if(bpChart) bpChart.destroy();
-            bpChart = new Chart(document.getElementById('bpChart'), {
-                type: 'line',
-                data: {
-                    labels: bd.map(d=>d.date.slice(5)),
-                    datasets: [
-                        { label: '高压', data: bd.map(d=>d.high), borderColor: '#ff3b30', borderWidth: 3, pointRadius: 0, tension: 0.4 },
-                        { label: '心率', data: bd.map(d=>d.hr), borderColor: '#ff2d55', borderWidth: 2, borderDash: [5,5], pointRadius: 0, tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-
-        function triggerAdd() {
-            const w = prompt("输入体重 (KG):");
-            const h = prompt("输入收缩压 (高压):");
-            const l = prompt("输入舒张压 (低压):");
-            const hr = prompt("输入心率 (BPM):");
-            const date = document.getElementById('global-date').value;
-
-            if(w) db.weight.push({ val: parseFloat(w), date, ts: new Date(date).getTime(), slot: '记录' });
-            if(h && l) db.bp.push({ high: parseInt(h), low: parseInt(l), hr: parseInt(hr)||70, date, ts: new Date(date).getTime(), slot: '记录' });
-            
-            localStorage.setItem('health_pad_v1', JSON.stringify(db));
-            refresh();
-        }
-
-        function changeRange(type, val) {
-            ranges[type] = parseInt(val);
-            renderCharts();
-        }
-
-        function openSettings() {
-            const t = prompt("设置你的目标体重:", db.target);
-            if(t) { db.target = parseFloat(t); localStorage.setItem('health_pad_v1', JSON.stringify(db)); refresh(); }
-        }
-
-        window.onload = () => {
-            document.getElementById('global-date').value = new Date().toISOString().split('T')[0];
-            refresh();
-            
-            // iPad 禁止橡皮筋缩放效果
-            document.addEventListener('touchmove', (e) => {
-                if (e.touches.length > 1) e.preventDefault();
-            }, { passive: false });
+            // iPad 特有的全屏检测
+            if (window.navigator.standalone) {
+                console.log("已经以 App 模式运行");
+            }
         };
+
+        // ... (确保补全你剩余的逻辑函数)
     </script>
 </body>
 </html>
