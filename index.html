@@ -6,252 +6,198 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="健康随手记">
+    <meta name="mobile-web-app-capable" content="yes">
     
-    <title>HealthLog</title>
+    <title>HealthPro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* 彻底消除网页感 */
-        :root { --app-green: #34c759; }
-        * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
+        :root { --ios-green: #34c759; --bg: #f2f2f7; }
         
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation; 
+            -webkit-user-select: none;
+        }
+
         body { 
-            margin: 0; background-color: #f2f2f7; color: #1c1c1e;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-            overflow: hidden; /* 禁止浏览器原生滚动 */
-            height: 100vh;
+            margin: 0; background: var(--bg); color: #1c1c1e;
+            font-family: -apple-system, system-ui, sans-serif;
+            height: 100vh; overflow: hidden;
         }
 
-        /* 模拟原生 App 滚动容器 */
-        .app-content { 
-            height: 100vh; overflow-y: auto; 
-            padding-top: env(safe-area-inset-top); 
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
-            -webkit-overflow-scrolling: touch; 
+        /* 适配 iPad 的滚动容器 */
+        .scroll-container {
+            height: 100vh; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 100px;
         }
 
-        /* 原生卡片样式 */
-        .ios-card { 
-            background: white; border-radius: 20px; 
-            margin: 16px; padding: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
-        }
-
-        /* 底部导航栏 */
-        .tab-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: calc(65px + env(safe-area-inset-bottom));
-            background: rgba(255, 255, 255, 0.85);
+        /* 毛玻璃导航 */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: saturate(180%) blur(20px);
             -webkit-backdrop-filter: saturate(180%) blur(20px);
-            border-top: 0.5px solid rgba(0,0,0,0.1);
-            display: flex; justify-content: space-around;
-            padding-top: 10px; z-index: 100;
         }
 
-        .tab-item { display: flex; flex-direction: column; align-items: center; color: #8e8e93; font-size: 10px; font-weight: 600; }
-        .tab-item.active { color: var(--app-green); }
+        /* 卡片原生感 */
+        .card { 
+            background: white; border-radius: 24px; 
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .card:active { transform: scale(0.98); }
 
-        /* 动态切换页面 */
-        .page { display: none; }
-        .page.active { display: block; animation: pageIn 0.25s ease-out; }
-        @keyframes pageIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-
-        /* 按钮动画 */
-        .btn-press:active { transform: scale(0.95); opacity: 0.8; }
-        
         /* 隐藏滚动条 */
-        .app-content::-webkit-scrollbar { display: none; }
+        .scroll-container::-webkit-scrollbar { display: none; }
 
-        input, select { background: #f2f2f7; border: none; border-radius: 12px; padding: 14px; font-size: 16px; width: 100%; font-weight: 500; }
+        /* 底部导航 */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(70px + env(safe-area-inset-bottom));
+            border-top: 0.5px solid rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; align-items: flex-start;
+            padding-top: 12px; z-index: 1000;
+        }
+
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8e8e93; }
+        .nav-btn.active { color: var(--ios-green); }
+
+        /* 响应式布局：iPad 横屏分两栏 */
+        @media (min-width: 768px) {
+            .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+            .full-width { grid-column: span 2; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="app-content">
+    <header class="glass fixed top-0 w-full z-50 pt-[env(safe-area-inset-top)] border-b border-gray-100">
+        <div class="px-6 h-16 flex items-center justify-between">
+            <h2 id="page-title" class="text-xl font-bold">健康看板</h2>
+            <div class="flex items-center gap-4">
+                <input type="date" id="global-date" onchange="refresh()" class="bg-transparent border-none text-blue-500 font-bold text-sm">
+                <i data-lucide="settings" onclick="openSettings()" class="w-5 h-5 text-gray-400"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="scroll-container pt-24 px-4">
         
-        <div id="page-home" class="page active">
-            <div class="px-6 pt-10 pb-4">
-                <h1 id="user-name-title" class="text-3xl font-black">你好, 主人</h1>
-                <p class="text-gray-400 font-bold text-sm uppercase">今日健康概览</p>
-            </div>
-
-            <div class="ios-card bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="text-xs font-bold opacity-80 mb-1">距离目标还差</div>
-                        <div class="text-5xl font-black"><span id="diff-val">0.0</span><small class="text-lg ml-1">kg</small></div>
+        <div id="view-home" class="page-content">
+            <div class="grid-layout">
+                <div class="card p-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-xl shadow-green-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-black opacity-70 uppercase">Distance to Goal</p>
+                            <h1 class="text-6xl font-black mt-1"><span id="diff-num">0.0</span><small class="text-xl ml-1">kg</small></h1>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-2xl">
+                            <i data-lucide="target" class="w-6 h-6"></i>
+                        </div>
                     </div>
-                    <button onclick="openSettings()" class="bg-white/20 p-2 rounded-full"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                    <p class="mt-6 text-sm font-bold opacity-90">目标体重: <span id="target-num">--</span> kg</p>
                 </div>
-            </div>
 
-            <div class="ios-card">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">最近记录</h3>
-                    <input type="date" id="home-view-date" onchange="renderAll()" class="w-auto p-1 text-sm bg-transparent text-blue-500 font-bold">
-                </div>
-                <div id="daily-list" class="space-y-4">
+                <div class="card p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg">最近血压</h3>
+                        <span id="bp-status" class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-black">正常</span>
                     </div>
+                    <div class="flex items-end gap-1">
+                        <span id="bp-val" class="text-5xl font-black">--/--</span>
+                        <span class="text-gray-300 font-bold mb-1 ml-2">mmHg</span>
+                    </div>
+                    <p class="text-xs text-gray-400 font-bold mt-4 italic" id="mood-text">点击记录今日感悟...</p>
+                </div>
+
+                <div class="card p-6 lg:col-span-1">
+                    <div class="flex justify-between mb-6">
+                        <span class="font-bold">体重轨迹</span>
+                        <select onchange="changeRange('w', this.value)" class="text-xs font-bold bg-gray-50 border-none rounded-lg p-1">
+                            <option value="7">7天</option>
+                            <option value="30">1月</option>
+                            <option value="90">3月</option>
+                            <option value="365">1年</option>
+                        </select>
+                    </div>
+                    <div class="h-64"><canvas id="wChart"></canvas></div>
+                </div>
+
+                <div class="card p-6 lg:col-span-1">
+                    <div class="flex justify-between mb-6">
+                        <span class="font-bold">血压/心率波动</span>
+                        <select onchange="changeRange('bp', this.value)" class="text-xs font-bold bg-gray-50 border-none rounded-lg p-1">
+                            <option value="7">7天</option>
+                            <option value="30">1月</option>
+                            <option value="365">1年</option>
+                        </select>
+                    </div>
+                    <div class="h-64"><canvas id="bpChart"></canvas></div>
+                </div>
             </div>
         </div>
 
-        <div id="page-stats" class="page">
-            <div class="px-6 pt-10 pb-4 flex justify-between items-end">
-                <h1 class="text-3xl font-black">趋势分析</h1>
-            </div>
-
-            <div class="ios-card">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="font-bold">体重变化</span>
-                    <div class="flex gap-2 text-xs font-bold" id="w-ranges">
-                        <button onclick="changeRange('w',7)" class="text-green-600">7天</button>
-                        <button onclick="changeRange('w',30)">1月</button>
-                        <button onclick="changeRange('w',90)">3月</button>
-                        <button onclick="changeRange('w',365)">1年</button>
-                    </div>
-                </div>
-                <div class="h-60"><canvas id="chart-weight"></canvas></div>
-            </div>
-
-            <div class="ios-card">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="font-bold">血压与心率</span>
-                    <div class="flex gap-2 text-xs font-bold" id="bp-ranges">
-                        <button onclick="changeRange('bp',7)" class="text-green-600">7天</button>
-                        <button onclick="changeRange('bp',30)">1月</button>
-                        <button onclick="changeRange('bp',365)">1年</button>
-                    </div>
-                </div>
-                <div class="h-60"><canvas id="chart-bp"></canvas></div>
-            </div>
         </div>
 
-        <div id="page-add" class="page">
-            <div class="px-6 pt-10 pb-4">
-                <h1 class="text-3xl font-black">记录数据</h1>
+    <nav class="nav-bar glass">
+        <button onclick="showSection('home')" class="nav-btn active" id="btn-home">
+            <i data-lucide="layout-dashboard"></i><span class="text-[10px] font-black">概览</span>
+        </button>
+        <button onclick="triggerAdd()" class="nav-btn">
+            <div class="w-12 h-12 bg-[#34c759] rounded-2xl flex items-center justify-center -translate-y-4 shadow-lg shadow-green-200">
+                <i data-lucide="plus" class="text-white w-8 h-8"></i>
             </div>
-            
-            <div class="ios-card space-y-5">
-                <div>
-                    <label class="text-xs font-black text-gray-400 mb-2 block uppercase ml-1">基本信息</label>
-                    <div class="flex gap-2">
-                        <input type="date" id="in-date">
-                        <select id="in-slot"><option>早起</option><option>睡前</option></select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-black text-gray-400 mb-2 block uppercase ml-1">体重 (KG)</label>
-                        <input type="number" id="in-weight" placeholder="0.0">
-                    </div>
-                    <div>
-                        <label class="text-xs font-black text-gray-400 mb-2 block uppercase ml-1">心率 (BPM)</label>
-                        <input type="number" id="in-hr" placeholder="75">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-xs font-black text-gray-400 mb-2 block uppercase ml-1">血压 (高/低)</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="in-high" placeholder="120">
-                        <input type="number" id="in-low" placeholder="80">
-                    </div>
-                </div>
-
-                <button onclick="saveData()" class="btn-press w-full py-5 bg-[#34c759] text-white rounded-2xl font-black text-xl shadow-lg shadow-green-200 mt-4">
-                    保存数据
-                </button>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="tab-bar">
-        <div class="tab-item active" onclick="switchPage('home', this)">
-            <i data-lucide="home"></i><span>首页</span>
-        </div>
-        <div class="tab-item" onclick="switchPage('stats', this)">
-            <i data-lucide="line-chart"></i><span>趋势</span>
-        </div>
-        <div class="tab-item" onclick="switchPage('add', this)">
-            <i data-lucide="plus-circle"></i><span>记录</span>
-        </div>
-    </div>
+        </button>
+        <button onclick="showSection('list')" class="nav-btn" id="btn-list">
+            <i data-lucide="list-checks"></i><span class="text-[10px] font-black">日志</span>
+        </button>
+    </nav>
 
     <script>
-        // --- 数据逻辑 ---
-        let db = JSON.parse(localStorage.getItem('ios_health_db') || '{"weight":[], "bp":[], "target":60, "name":"我的"}');
-        let charts = {};
+        // 数据持久化
+        let db = JSON.parse(localStorage.getItem('health_pad_v1') || '{"weight":[], "bp":[], "target":65}');
+        let wChart, bpChart;
         let ranges = { w: 7, bp: 7 };
 
-        function switchPage(pageId, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            if(pageId === 'stats') setTimeout(renderCharts, 100);
-            renderAll();
-        }
-
-        function saveData() {
-            const date = document.getElementById('in-date').value;
-            const slot = document.getElementById('in-slot').value;
-            const w = parseFloat(document.getElementById('in-weight').value);
-            const high = parseInt(document.getElementById('in-high').value);
-            const low = parseInt(document.getElementById('in-low').value);
-            const hr = parseInt(document.getElementById('in-hr').value);
-            const ts = new Date(date).getTime();
-
-            if (w) db.weight.push({ date, slot, val: w, ts });
-            if (high && low) db.bp.push({ date, slot, high, low, hr: hr||0, ts });
-
-            localStorage.setItem('ios_health_db', JSON.stringify(db));
-            // 简单反馈
-            alert("已存入记录");
-            switchPage('home', document.querySelectorAll('.tab-item')[0]);
-        }
-
-        function renderAll() {
+        function refresh() {
             lucide.createIcons();
-            // 计算差额
-            if(db.weight.length > 0) {
-                const cur = db.weight.sort((a,b)=>a.ts-b.ts)[db.weight.length-1].val;
-                document.getElementById('diff-val').innerText = (cur - db.target).toFixed(1);
+            const sortedW = [...db.weight].sort((a,b)=>a.ts-b.ts);
+            const latestW = sortedW.length ? sortedW[sortedW.length-1].val : db.target;
+            
+            document.getElementById('target-num').innerText = db.target;
+            document.getElementById('diff-num').innerText = (latestW - db.target).toFixed(1);
+            
+            const vDate = document.getElementById('global-date').value;
+            const todayBP = db.bp.filter(i => i.date === vDate)[0];
+            if(todayBP) {
+                document.getElementById('bp-val').innerText = `${todayBP.high}/${todayBP.low}`;
             }
-            
-            // 首页当日列表
-            const vDate = document.getElementById('home-view-date').value;
-            const list = document.getElementById('daily-list');
-            const dayW = db.weight.filter(i => i.date === vDate);
-            const dayB = db.bp.filter(i => i.date === vDate);
-            
-            list.innerHTML = '';
-            dayW.forEach(w => list.innerHTML += `<div class="flex justify-between items-center py-2 border-b border-gray-50"><span class="font-bold text-gray-500">${w.slot}体重</span><span class="font-black text-xl">${w.val} kg</span></div>`);
-            dayB.forEach(b => list.innerHTML += `<div class="flex justify-between items-center py-2 border-b border-gray-50"><span class="font-bold text-gray-500">${b.slot}血压</span><span class="font-black text-xl">${b.high}/${b.low} <small class="text-xs opacity-40">HR:${b.hr}</small></span></div>`);
-            if(list.innerHTML === '') list.innerHTML = '<div class="text-center text-gray-300 py-10 font-bold">当日无数据</div>';
+
+            renderCharts();
         }
 
         function renderCharts() {
             const filter = (arr, d) => arr.filter(i => i.ts >= Date.now() - d*86400000).sort((a,b)=>a.ts-b.ts);
             
-            // 体重图
+            // 体重
             const wd = filter(db.weight, ranges.w);
-            if(charts.w) charts.w.destroy();
-            charts.w = new Chart(document.getElementById('chart-weight'), {
-                type: 'line', data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{ data: wd.map(d=>d.val), borderColor: '#34c759', borderWidth: 4, pointRadius: 0, tension: 0.4 }] },
+            if(wChart) wChart.destroy();
+            wChart = new Chart(document.getElementById('wChart'), {
+                type: 'line',
+                data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{ data: wd.map(d=>d.val), borderColor: '#34c759', borderWidth: 5, pointRadius: 2, tension: 0.4, fill: true, backgroundColor: 'rgba(52,199,89,0.05)' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // 血压图
+            // 血压
             const bd = filter(db.bp, ranges.bp);
-            if(charts.bp) charts.bp.destroy();
-            charts.bp = new Chart(document.getElementById('chart-bp'), {
-                type: 'line', data: {
+            if(bpChart) bpChart.destroy();
+            bpChart = new Chart(document.getElementById('bpChart'), {
+                type: 'line',
+                data: {
                     labels: bd.map(d=>d.date.slice(5)),
                     datasets: [
                         { label: '高压', data: bd.map(d=>d.high), borderColor: '#ff3b30', borderWidth: 3, pointRadius: 0, tension: 0.4 },
@@ -262,22 +208,39 @@
             });
         }
 
-        function changeRange(t, d) {
-            ranges[t] = d;
+        function triggerAdd() {
+            const w = prompt("输入体重 (KG):");
+            const h = prompt("输入收缩压 (高压):");
+            const l = prompt("输入舒张压 (低压):");
+            const hr = prompt("输入心率 (BPM):");
+            const date = document.getElementById('global-date').value;
+
+            if(w) db.weight.push({ val: parseFloat(w), date, ts: new Date(date).getTime(), slot: '记录' });
+            if(h && l) db.bp.push({ high: parseInt(h), low: parseInt(l), hr: parseInt(hr)||70, date, ts: new Date(date).getTime(), slot: '记录' });
+            
+            localStorage.setItem('health_pad_v1', JSON.stringify(db));
+            refresh();
+        }
+
+        function changeRange(type, val) {
+            ranges[type] = parseInt(val);
             renderCharts();
         }
 
         function openSettings() {
-            const t = prompt("设置目标体重(kg):", db.target);
-            if(t) { db.target = parseFloat(t); localStorage.setItem('ios_health_db', JSON.stringify(db)); renderAll(); }
+            const t = prompt("设置你的目标体重:", db.target);
+            if(t) { db.target = parseFloat(t); localStorage.setItem('health_pad_v1', JSON.stringify(db)); refresh(); }
         }
 
         window.onload = () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('in-date').value = today;
-            document.getElementById('home-view-date').value = today;
-            renderAll();
-        }
+            document.getElementById('global-date').value = new Date().toISOString().split('T')[0];
+            refresh();
+            
+            // iPad 禁止橡皮筋缩放效果
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 1) e.preventDefault();
+            }, { passive: false });
+        };
     </script>
 </body>
 </html>
