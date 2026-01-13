@@ -4,274 +4,236 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="健康小本本">
-<title>健康小本本</title>
+<meta name="apple-mobile-web-app-title" content="健康记录">
+<title>健康记录</title>
 
 <style>
-:root{
- --pink:#ff8fb1;
- --purple:#a78bfa;
- --blue:#67e8f9;
- --bg:#f6f7fb;
- --card:#ffffff;
- --text:#222;
-}
-
 body{
  margin:0;
  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC";
- background:var(--bg);
- color:var(--text);
- overflow:hidden;
+ background:#f6f7fb;
+ color:#222;
 }
-
-/* 顶部栏 */
-.header{
- height:60px;
+header{
+ height:56px;
  display:flex;
  align-items:center;
  justify-content:space-between;
- padding:0 20px;
+ padding:0 16px;
  background:#fff;
  box-shadow:0 4px 20px rgba(0,0,0,.08);
- z-index:10;
 }
-
-.header h1{
- font-size:20px;
- margin:0;
+header button{border:none;background:none;font-size:20px;}
+main{padding:16px;}
+.card{
+ background:#fff;
+ border-radius:20px;
+ padding:16px;
+ margin-bottom:16px;
+ box-shadow:0 12px 30px rgba(0,0,0,.1);
 }
-
-.header button{
- background:none;
- border:none;
- font-size:22px;
-}
-
-/* 抽屉 */
-.drawer{
- position:fixed;
- top:0;left:0;
- height:100%;
- width:280px;
- background:linear-gradient(180deg,var(--pink),var(--purple));
- color:#fff;
- transform:translateX(-100%);
- transition:.35s ease;
- z-index:20;
- padding:24px;
-}
-
-.drawer.open{transform:translateX(0);}
-
-.drawer h2{margin-top:0;}
-
-.drawer button{
+h2{margin:0 0 12px;}
+input,select{
  width:100%;
+ padding:14px;
+ border-radius:14px;
+ border:1px solid #ddd;
  margin-bottom:12px;
+ font-size:16px;
+}
+button.primary{
+ width:100%;
  padding:14px;
  border:none;
- border-radius:14px;
- background:#ffffff33;
+ border-radius:999px;
+ background:linear-gradient(135deg,#ff8fb1,#a78bfa);
  color:#fff;
  font-size:16px;
 }
-
-.mask{
- position:fixed;
- inset:0;
- background:rgba(0,0,0,.3);
- display:none;
- z-index:15;
-}
-.mask.show{display:block;}
-
-/* 主内容 */
-.main{
- height:calc(100vh - 60px);
- overflow:auto;
- padding:24px;
-}
-
-.card{
- background:var(--card);
- border-radius:26px;
- padding:24px;
- margin-bottom:22px;
- box-shadow:0 20px 40px rgba(0,0,0,.12);
-}
-
-h2{margin-top:0;}
-
-input{
- width:100%;
- padding:16px;
- border-radius:16px;
- border:1px solid #ddd;
- margin-bottom:14px;
- font-size:17px;
-}
-
-.primary{
- width:100%;
- padding:16px;
- border-radius:999px;
+.tabs button{
+ margin-right:6px;
+ padding:6px 12px;
+ border-radius:12px;
  border:none;
- background:linear-gradient(135deg,var(--pink),var(--purple));
- color:#fff;
- font-size:17px;
+ background:#eee;
 }
-
-.chart{
- height:260px;
+canvas{width:100%;height:240px;}
+.food-item{
  display:flex;
- align-items:flex-end;
- gap:10px;
+ gap:8px;
+ margin-bottom:8px;
 }
-
-.bar{
- flex:1;
- background:linear-gradient(180deg,var(--blue),var(--purple));
- border-radius:12px 12px 6px 6px;
- animation:grow .6s ease forwards;
-}
-
-@keyframes grow{
- from{height:0}
- to{height:var(--h)}
-}
-
-.page{display:none;}
-.page.active{display:block;}
+.food-item input{flex:1;}
 </style>
 </head>
 
 <body>
 
-<!-- 抽屉 -->
-<div class="drawer" id="drawer">
-<h2>健康小本本</h2>
-<button onclick="show('weight')">⚖️ 体重</button>
-<button onclick="show('food')">🍚 饮食</button>
-<button onclick="show('sport')">🏃 运动</button>
-<button onclick="show('summary')">📊 总结</button>
-<button onclick="show('family')">👨‍👩‍👧 家庭</button>
+<header>
+<button onclick="toggleMenu()">☰</button>
+<div id="userName">未选择成员</div>
+<button onclick="showPage('settings')">⚙️</button>
+</header>
+
+<main id="menu" style="display:none">
+<div class="card">
+<button class="primary" onclick="showPage('weight')">⚖️ 体重</button><br><br>
+<button class="primary" onclick="showPage('food')">🍚 饮食</button>
 </div>
+</main>
 
-<div class="mask" id="mask" onclick="toggleDrawer()"></div>
-
-<!-- 顶部 -->
-<div class="header">
-<button onclick="toggleDrawer()">☰</button>
-<h1>健康小本本</h1>
-<button>⚙️</button>
-</div>
-
-<!-- 主体 -->
-<div class="main">
+<main id="content">
 
 <div class="card">
-<input id="date" type="date">
+<input type="date" id="date">
+<div class="tabs">
+<button onclick="timeType='am'">🌅 早</button>
+<button onclick="timeType='pm'">🌙 晚</button>
+</div>
 </div>
 
-<div class="page active" id="weight">
-<div class="card">
-<h2>体重</h2>
-<input id="weightVal" type="number" placeholder="体重 kg">
+<!-- 体重 -->
+<div id="weight" class="card">
+<h2>体重记录</h2>
+<input type="number" id="weightVal" placeholder="体重 kg">
 <button class="primary" onclick="saveWeight()">保存体重</button>
-</div>
-<div class="card">
-<h2>最近 7 天</h2>
-<div class="chart" id="weightChart"></div>
-</div>
+
+<select onchange="range=this.value;drawWeight()" style="margin-top:12px">
+<option value="7">7 天</option>
+<option value="30">1 个月</option>
+<option value="90">3 个月</option>
+<option value="180">半年</option>
+<option value="365">1 年</option>
+</select>
+
+<canvas id="weightChart"></canvas>
 </div>
 
-<div class="page" id="food">
-<div class="card">
-<h2>饮食</h2>
-<input id="foodCal" type="number" placeholder="摄入 kcal">
+<!-- 饮食 -->
+<div id="food" class="card" style="display:none">
+<h2>饮食记录</h2>
+<div id="foods"></div>
+<button onclick="addFood()">➕ 添加食品</button>
 <button class="primary" onclick="saveFood()">保存饮食</button>
-</div>
-</div>
-
-<div class="page" id="sport">
-<div class="card">
-<h2>运动</h2>
-<input id="sportCal" type="number" placeholder="消耗 kcal">
-<button class="primary" onclick="saveSport()">保存运动</button>
-</div>
+<canvas id="foodChart"></canvas>
 </div>
 
-<div class="page" id="summary">
-<div class="card" id="summaryCard"></div>
+<!-- 设置 -->
+<div id="settings" class="card" style="display:none">
+<h2>成员设置</h2>
+<input id="memberName" placeholder="成员名">
+<input id="startWeight" placeholder="初始体重">
+<input id="targetWeight" placeholder="目标体重">
+<button class="primary" onclick="saveMember()">保存成员</button>
 </div>
 
-<div class="page" id="family">
-<div class="card" id="familyList"></div>
-</div>
-
-</div>
+</main>
 
 <script>
-const store=JSON.parse(localStorage.getItem("healthStable")||"{}");
-let currentUser=Object.keys(store)[0]||"我";
-store[currentUser]=store[currentUser]||{};
+let store=JSON.parse(localStorage.getItem("healthPro")||"{}");
+let currentUser=Object.keys(store)[0]||"";
+let timeType="pm";
+let range=7;
 date.value=new Date().toISOString().slice(0,10);
 
-function save(){localStorage.setItem("healthStable",JSON.stringify(store));}
+function saveStore(){
+ localStorage.setItem("healthPro",JSON.stringify(store));
+}
+
+function toggleMenu(){
+ menu.style.display=menu.style.display?"":"block";
+}
+
+function showPage(id){
+ ["weight","food","settings"].forEach(p=>{
+  document.getElementById(p).style.display="none";
+ });
+ document.getElementById(id).style.display="block";
+ menu.style.display="none";
+}
 
 function ensure(){
- const d=date.value;
- store[currentUser][d]=store[currentUser][d]||{weight:null,food:0,sport:0};
+ if(!currentUser)return;
+ store[currentUser].records=store[currentUser].records||{};
+ store[currentUser].records[date.value]=
+ store[currentUser].records[date.value]||{am:{},pm:{},foods:[]};
 }
 
 function saveWeight(){
  ensure();
- store[currentUser][date.value].weight=Number(weightVal.value);
- save();render();
+ store[currentUser].records[date.value][timeType].weight=Number(weightVal.value);
+ saveStore();
+ drawWeight();
 }
+
+function addFood(){
+ const d=document.createElement("div");
+ d.className="food-item";
+ d.innerHTML='<input placeholder="食物"><input type="number" placeholder="kcal">';
+ foods.appendChild(d);
+}
+
 function saveFood(){
  ensure();
- store[currentUser][date.value].food=Number(foodCal.value||0);
- save();
-}
-function saveSport(){
- ensure();
- store[currentUser][date.value].sport=Number(sportCal.value||0);
- save();
+ store[currentUser].records[date.value].foods=[...foods.children].map(f=>({
+  name:f.children[0].value,
+  kcal:Number(f.children[1].value)
+ }));
+ saveStore();
+ drawFood();
 }
 
-function render(){
- weightChart.innerHTML="";
- const days=Object.entries(store[currentUser]).slice(-7);
- const max=Math.max(...days.map(d=>d[1].weight||0),1);
- days.forEach(d=>{
-  const b=document.createElement("div");
-  b.className="bar";
-  b.style.setProperty("--h",(d[1].weight/max*100)+"%");
-  weightChart.appendChild(b);
+function saveMember(){
+ const n=memberName.value;
+ if(!n)return;
+ store[n]={profile:{
+  start:Number(startWeight.value),
+  target:Number(targetWeight.value)
+ },records:{}};
+ currentUser=n;
+ userName.innerText=n;
+ saveStore();
+ showPage('weight');
+}
+
+function drawWeight(){
+ const ctx=weightChart.getContext("2d");
+ ctx.clearRect(0,0,300,300);
+ if(!currentUser)return;
+ const rec=Object.entries(store[currentUser].records)
+  .slice(-range)
+  .map(r=>r[1][timeType].weight)
+  .filter(Boolean);
+ if(!rec.length)return;
+ ctx.beginPath();
+ rec.forEach((v,i)=>{
+  const x=i*(300/rec.length);
+  const y=240-(v/Math.max(...rec))*200;
+  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
  });
- summaryCard.innerHTML=`
-  <h2>今日总结</h2>
-  ⚖️ ${store[currentUser][date.value]?.weight ?? "--"} kg<br>
-  🍚 ${store[currentUser][date.value]?.food ?? 0} kcal<br>
-  🏃 ${store[currentUser][date.value]?.sport ?? 0} kcal
- `;
+ ctx.strokeStyle="#ff8fb1";
+ ctx.lineWidth=3;
+ ctx.stroke();
 }
 
-function toggleDrawer(){
- drawer.classList.toggle("open");
- mask.classList.toggle("show");
+function drawFood(){
+ const ctx=foodChart.getContext("2d");
+ ctx.clearRect(0,0,300,300);
+ if(!currentUser)return;
+ const days=Object.values(store[currentUser].records).slice(-30);
+ const vals=days.map(d=>d.foods.reduce((s,f)=>s+f.kcal,0));
+ if(!vals.length)return;
+ ctx.beginPath();
+ vals.forEach((v,i)=>{
+  const x=i*(300/vals.length);
+  const y=240-(v/Math.max(...vals))*200;
+  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+ });
+ ctx.strokeStyle="#67e8f9";
+ ctx.lineWidth=3;
+ ctx.stroke();
 }
-
-function show(id){
- document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- toggleDrawer();
- render();
-}
-
-render();
 </script>
+
 </body>
 </html>
