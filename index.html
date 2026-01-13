@@ -27,8 +27,6 @@ body{
  display:flex;
  height:100vh;
 }
-
-/* 左侧栏 */
 aside{
  width:260px;
  background:var(--card);
@@ -37,16 +35,12 @@ aside{
  overflow:auto;
 }
 aside h3{margin-top:0;}
-aside button{
+aside button, aside select{
  width:100%;
  margin-bottom:8px;
  padding:10px;
  border:none;
  border-radius:12px;
- background:#eee;
-}
-.member{
- margin-bottom:12px;
 }
 .member div{
  padding:6px 10px;
@@ -54,8 +48,6 @@ aside button{
  cursor:pointer;
 }
 .member div:hover{background:#ddd}
-
-/* 主区 */
 main{
  flex:1;
  padding:20px;
@@ -68,7 +60,7 @@ main{
  margin-bottom:16px;
  box-shadow:0 10px 30px rgba(0,0,0,.1);
 }
-input,select{
+input{
  width:100%;
  padding:12px;
  border-radius:12px;
@@ -83,9 +75,7 @@ input,select{
  border-radius:999px;
  width:100%;
 }
-canvas{width:100%;height:240px}
-
-/* 进度条 */
+canvas{width:100%;height:220px}
 .progress{
  height:14px;
  background:#ddd;
@@ -96,11 +86,7 @@ canvas{width:100%;height:240px}
  height:100%;
  background:linear-gradient(135deg,#67e8f9,#a78bfa);
 }
-.tip{
- margin-top:10px;
- color:var(--primary);
- font-weight:500;
-}
+.tip{margin-top:10px;color:var(--primary);}
 </style>
 </head>
 
@@ -108,7 +94,7 @@ canvas{width:100%;height:240px}
 
 <aside>
 <h3>设置</h3>
-<button onclick="showPage('settings')">添加成员</button>
+<button onclick="openSettings()">添加成员</button>
 <select onchange="setTheme(this.value)">
  <option value="system">跟随系统</option>
  <option value="light">日间模式</option>
@@ -132,6 +118,7 @@ let range=7;
 
 function save(){localStorage.setItem("healthFinal",JSON.stringify(store));}
 
+/* ---------- 主题 ---------- */
 function setTheme(t){
  localStorage.setItem("theme",t);
  applyTheme();
@@ -147,6 +134,7 @@ function applyTheme(){
 }
 applyTheme();
 
+/* ---------- 成员 ---------- */
 function renderMembers(){
  members.innerHTML="";
  Object.keys(store).forEach(n=>{
@@ -169,11 +157,49 @@ function open(name,p){
  render();
 }
 
-function showPage(p){
- page=p;
+function openSettings(){
+ page="settings";
  render();
 }
 
+/* ---------- 渲染核心（已修复） ---------- */
+function render(){
+ // ✅ 设置页优先
+ if(page==="settings"){
+  content.innerHTML=`
+   <div class="card">
+    <h2>添加成员</h2>
+    <input id="name" placeholder="成员名">
+    <input id="start" placeholder="初始体重">
+    <input id="target" placeholder="目标体重">
+    <button class="primary" onclick="addMember()">保存成员</button>
+   </div>`;
+  return;
+ }
+
+ // 其他页面才要求已有成员
+ if(!currentUser){
+  content.innerHTML="<div class='card'>请先添加成员</div>";
+  return;
+ }
+
+ const today=new Date().toISOString().slice(0,10);
+ const profile=store[currentUser].profile;
+ content.innerHTML=`
+ <div class="card">
+  <h2>${currentUser}</h2>
+  <div>初始 ${profile.start}kg → 目标 ${profile.target}kg</div>
+  <div class="progress"><div style="width:${progress()}%"></div></div>
+  <div class="tip">${tip()}</div>
+ </div>
+ ${page==="weight"?weightUI(today):""}
+ ${page==="food"?foodUI(today):""}
+ ${page==="sport"?sportUI(today):""}
+ `;
+ if(page==="weight")drawWeight();
+}
+
+/* ---------- 数据 ---------- */
 function ensure(date){
  store[currentUser].records=store[currentUser].records||{};
  store[currentUser].records[date]=store[currentUser].records[date]||{
@@ -181,56 +207,19 @@ function ensure(date){
  };
 }
 
-function render(){
- if(!currentUser){
-  content.innerHTML="<div class='card'>请先添加成员</div>";
-  return;
- }
- if(page==="settings"){
-  content.innerHTML=`
-   <div class="card">
-    <input id="name" placeholder="成员名">
-    <input id="start" placeholder="初始体重">
-    <input id="target" placeholder="目标体重">
-    <button class="primary" onclick="addMember()">保存</button>
-   </div>`;
-  return;
- }
- const today=new Date().toISOString().slice(0,10);
- const profile=store[currentUser].profile;
- let html=`
- <div class="card">
-  <h2>${currentUser}</h2>
-  <div>初始 ${profile.start}kg → 目标 ${profile.target}kg</div>
-  <div class="progress"><div style="width:${progress()}%"></div></div>
-  <div class="tip">${tip()}</div>
- </div>`;
- if(page==="weight")html+=weightUI(today);
- if(page==="food")html+=foodUI(today);
- if(page==="sport")html+=sportUI(today);
- content.innerHTML=html;
+function addMember(){
+ const n=name.value;
+ if(!n)return;
+ store[n]={profile:{
+  start:Number(start.value),
+  target:Number(target.value)
+ },records:{}};
+ save();
+ renderMembers();
+ open(n,"weight");
 }
 
-function progress(){
- const p=store[currentUser].profile;
- const records=Object.values(store[currentUser].records||{});
- const last=records.at(-1)?.pm?.weight;
- if(!last)return 0;
- return Math.min(100,
-  (p.start-last)/(p.start-p.target)*100);
-}
-
-function tip(){
- const p=store[currentUser].profile;
- const records=Object.values(store[currentUser].records||{});
- const last=records.at(-1)?.pm?.weight;
- if(!last)return "记录从今天开始 🌱";
- const diff=(last-p.target).toFixed(1);
- return diff>0?
-  `距离目标还有 ${diff}kg，加油 💪`:
-  "已达到目标，太棒了 🎉";
-}
-
+/* ---------- 体重 ---------- */
 function weightUI(date){
  return `
  <div class="card">
@@ -273,71 +262,19 @@ function drawWeight(){
  c.stroke();
 }
 
-function foodUI(date){
- return `
- <div class="card">
-  <input type="date" id="date" value="${date}">
-  <button onclick="addFood()">添加食品</button>
-  <div id="foods"></div>
-  <button class="primary" onclick="saveFood()">保存</button>
-  <canvas id="fc"></canvas>
- </div>`;
+/* ---------- 激励 ---------- */
+function progress(){
+ const p=store[currentUser].profile;
+ const last=Object.values(store[currentUser].records).at(-1)?.pm?.weight;
+ if(!last)return 0;
+ return Math.min(100,(p.start-last)/(p.start-p.target)*100);
 }
-
-function addFood(){
- const d=document.createElement("div");
- d.innerHTML='<input placeholder="食物"><input placeholder="kcal">';
- foods.appendChild(d);
-}
-
-function saveFood(){
- const d=document.getElementById("date").value;
- ensure(d);
- let t=0;
- store[currentUser].records[d].foods=[...foods.children].map(f=>{
-  const k=Number(f.children[1].value||0);t+=k;
-  return {name:f.children[0].value,kcal:k};
- });
- store[currentUser].records[d].foodTotal=t;
- save();render();
-}
-
-function sportUI(date){
- return `
- <div class="card">
-  <input type="date" id="date" value="${date}">
-  <button onclick="addSport()">添加运动</button>
-  <div id="sports"></div>
-  <button class="primary" onclick="saveSport()">保存</button>
- </div>`;
-}
-
-function addSport(){
- const d=document.createElement("div");
- d.innerHTML='<input placeholder="运动"><input placeholder="kcal">';
- sports.appendChild(d);
-}
-
-function saveSport(){
- const d=document.getElementById("date").value;
- ensure(d);
- let t=0;
- store[currentUser].records[d].sport=[...sports.children].map(s=>{
-  const k=Number(s.children[1].value||0);t+=k;
-  return {name:s.children[0].value,kcal:k};
- });
- store[currentUser].records[d].sportTotal=t;
- save();render();
-}
-
-function addMember(){
- const n=name.value;
- if(!n)return;
- store[n]={profile:{
-  start:Number(start.value),
-  target:Number(target.value)
- },records:{}};
- save();renderMembers();open(n,"weight");
+function tip(){
+ const p=store[currentUser].profile;
+ const last=Object.values(store[currentUser].records).at(-1)?.pm?.weight;
+ if(!last)return "从今天开始记录吧 🌱";
+ const diff=(last-p.target).toFixed(1);
+ return diff>0?`距离目标还差 ${diff}kg，加油 💪`:"已达成目标，太棒了 🎉";
 }
 </script>
 
