@@ -3,45 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>我们的体重本 💗</title>
 
   <style>
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid #eee;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 14px;
-      padding: 14px;
-      border-radius: 999px;
-      background: #ff8fb1;
-      color: white;
-      border: none;
-      font-size: 16px;
-    }
-    <script>
-      function saveWeight() {
-        const value = document.getElementById("weightInput").value;
-        if (!value) return;
-    
-        document.getElementById("weightDisplay").innerText = value + " kg";
-        localStorage.setItem("todayWeight", value);
-      }
-    
-      // 打开 App 时自动读取
-      const saved = localStorage.getItem("todayWeight");
-      if (saved) {
-        document.getElementById("weightDisplay").innerText = saved + " kg";
-      }
-    </script>
-
     body {
       margin: 0;
       background: #fff7fb;
@@ -50,40 +14,133 @@
 
     .app {
       padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 12px;
     }
 
     .card {
       background: #fff;
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    .title {
-      font-size: 22px;
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #eee;
+      font-size: 16px;
+      box-sizing: border-box;
       margin-bottom: 10px;
     }
 
-    .weight {
-      font-size: 40px;
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 999px;
+      background: #ff8fb1;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+    }
+
+    .weight-big {
+      font-size: 36px;
       font-weight: bold;
       color: #ff8fb1;
+      margin-top: 6px;
     }
 
     .tip {
+      font-size: 14px;
       color: #999;
-      margin-top: 8px;
+      margin-top: 4px;
+    }
+
+    .record {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .record span {
+      font-size: 15px;
+    }
+
+    .record button {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: #eee;
+      color: #666;
     }
   </style>
 </head>
 
 <body>
   <div class="app">
+    <h1>今天也要温柔一点 🌷</h1>
+
     <div class="card">
-      <div class="title">今天也要温柔一点 🌷</div>
-      <div class="weight">65.2 kg</div>
-      <div class="tip">比昨天 -0.3 kg，好棒</div>
+      <input id="weightInput" type="number" step="0.1" placeholder="输入今天的体重（kg）" />
+      <button onclick="saveToday()">保存今天的记录</button>
+      <div class="weight-big" id="todayWeight">-- kg</div>
+      <div class="tip" id="todayDate"></div>
+    </div>
+
+    <div class="card">
+      <h1 style="font-size:18px;">记录历史 📖</h1>
+      <div id="list"></div>
     </div>
   </div>
-</body>
-</html>
+
+  <script>
+    const today = new Date().toISOString().slice(0, 10);
+
+    function load() {
+      const data = JSON.parse(localStorage.getItem("weights") || "{}");
+      if (data[today]) {
+        document.getElementById("todayWeight").innerText = data[today] + " kg";
+      }
+      document.getElementById("todayDate").innerText = "今天：" + today;
+      renderList(data);
+    }
+
+    function saveToday() {
+      const value = document.getElementById("weightInput").value;
+      if (!value) return;
+
+      const data = JSON.parse(localStorage.getItem("weights") || "{}");
+      data[today] = value;
+      localStorage.setItem("weights", JSON.stringify(data));
+
+      document.getElementById("todayWeight").innerText = value + " kg";
+      document.getElementById("weightInput").value = "";
+      renderList(data);
+    }
+
+    function renderList(data) {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      const keys = Object.keys(data).sort().reverse();
+      if (keys.length === 0) {
+        list.innerHTML = "<div class='tip'>还没有记录</div>";
+        return;
+      }
+
+      keys.forEach(date => {
+        const div = document.createElement("div");
+        div.className = "record";
+        div.innerHTML = `
+          <span>${date} · ${data[date]} kg</span>
+          <button onclick="removeRecord('${date}')">删除</button>
+        `;
+        list.appe
