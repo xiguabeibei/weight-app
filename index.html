@@ -2,408 +2,204 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3567/3567440.png">
-    <title>HealthFlow</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的健康日记</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        :root { --ios-green: #34c759; --ios-bg: #f2f2f7; }
-        body { 
-            background-color: var(--ios-bg); 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        /* 原生 App 弹性滚动 */
-        .app-container { height: 100vh; overflow-y: scroll; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* 毛玻璃效果 */
-        .glass-nav { 
-            background: rgba(255, 255, 255, 0.8); 
-            backdrop-filter: saturate(180%) blur(20px); 
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
-        }
-
-        /* 像原生按钮一样的点击回弹 */
-        .active-scale:active { transform: scale(0.96); transition: 0.1s; }
-
-        /* 滑动删除的原生感 */
-        .swipe-item { position: relative; overflow: hidden; background: #ff3b30; border-radius: 16px; margin-bottom: 12px; }
-        .swipe-content { position: relative; z-index: 10; background: white; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-
-        /* 隐藏底部滚动空间 */
-        .safe-area-bottom { height: env(safe-area-inset-bottom); background: white; }
+        /* 极简画风，类似微信 */
+        body { font-family: sans-serif; background: #f7f7f7; margin: 0; padding: 20px; color: #333; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h2 { font-size: 24px; margin: 0 0 15px 0; font-weight: bold; }
         
-        /* 图表范围按钮样式 */
-        .range-pill { font-size: 12px; padding: 6px 14px; border-radius: 20px; color: #8e8e93; background: #e5e5ea; font-weight: 600; }
-        .range-pill.active { background: var(--ios-green); color: white; }
+        /* 记录模块 */
+        .input-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; flex: 1; min-width: 120px; }
+        button.save-btn { background: #07c160; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; }
+        
+        /* 图表控制 */
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-group button { background: #eee; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; margin-left: 5px; cursor: pointer; }
+        .btn-group button.active { background: #07c160; color: white; }
+        .chart-container { height: 250px; width: 100%; }
 
-        /* 页面切换动画 */
-        .tab-panel { display: none; animation: fadeIn 0.3s ease; }
-        .tab-panel.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 列表展示 */
+        .list-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+        .list-item:last-child { border: none; }
+        .item-info { font-size: 16px; }
+        .item-date { font-size: 12px; color: #999; }
+        .del-btn { color: #ff4d4f; font-size: 14px; margin-left: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <header class="glass-nav fixed top-0 w-full z-50 pt-[env(safe-area-inset-top)] border-b border-gray-200">
-        <div class="px-5 h-14 flex items-center justify-between">
-            <div class="flex items-center gap-2" onclick="toggleSidebar()">
-                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                    <i data-lucide="user" class="w-4 h-4 text-white"></i>
-                </div>
-                <span id="header-name" class="font-bold text-lg text-gray-800">档案</span>
-            </div>
-            <div class="flex items-center gap-4">
-                <input type="date" id="view-date" onchange="render()" class="bg-transparent border-none text-blue-500 font-semibold text-sm focus:ring-0">
-                <button onclick="openManageModal()" class="active-scale text-gray-400"><i data-lucide="settings-2"></i></button>
+    <div class="card">
+        <h2 id="userName">我的健康看板</h2>
+        <div style="font-size: 18px; color: #666;">
+            当前体重：<span id="curW" style="color:#07c160; font-weight:bold;">--</span> KG 
+            (目标: <span id="tarW">60</span> KG)
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>记录数据</h2>
+        <div class="input-group">
+            <input type="date" id="recDate">
+            <select id="recSlot"><option>早起</option><option>睡前</option></select>
+        </div>
+        <div class="input-group">
+            <input type="number" id="recWeight" placeholder="体重(kg)">
+            <input type="number" id="recHigh" placeholder="高压(收缩)">
+            <input type="number" id="recLow" placeholder="低压(舒张)">
+            <input type="number" id="recHR" placeholder="心率(bpm)">
+        </div>
+        <button class="save-btn" onclick="saveData()">保存记录</button>
+    </div>
+
+    <div class="card">
+        <div class="chart-header">
+            <b>体重曲线</b>
+            <div class="btn-group" id="wBtns">
+                <button class="active" onclick="changeRange('w', 7)">7天</button>
+                <button onclick="changeRange('w', 30)">1月</button>
+                <button onclick="changeRange('w', 90)">3月</button>
+                <button onclick="changeRange('w', 180)">半年</button>
+                <button onclick="changeRange('w', 365)">1年</button>
             </div>
         </div>
-    </header>
+        <div class="chart-container"><canvas id="wChart"></canvas></div>
+    </div>
 
-    <div class="app-container pt-20 pb-32 px-4 no-scrollbar">
-        <div id="panel-home" class="tab-panel active">
-            <div class="bg-white rounded-3xl p-6 shadow-sm mb-6 border border-white">
-                <div class="flex justify-between items-start mb-6">
+    <div class="card">
+        <div class="chart-header">
+            <b>血压 & 心率</b>
+            <div class="btn-group" id="bpBtns">
+                <button class="active" onclick="changeRange('bp', 7)">7天</button>
+                <button onclick="changeRange('bp', 30)">1月</button>
+                <button onclick="changeRange('bp', 90)">3月</button>
+                <button onclick="changeRange('bp', 180)">半年</button>
+                <button onclick="changeRange('bp', 365)">1年</button>
+            </div>
+        </div>
+        <div class="chart-container"><canvas id="bpChart"></canvas></div>
+    </div>
+
+    <div class="card">
+        <h2>历史记录</h2>
+        <div id="historyList"></div>
+    </div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('myHealthData') || '{"weight":[], "bp":[], "target":65}');
+    let wChart, bpChart;
+    let currentWRange = 7, currentBPRange = 7;
+
+    // 初始化日期
+    document.getElementById('recDate').value = new Date().toISOString().split('T')[0];
+
+    function saveData() {
+        const date = document.getElementById('recDate').value;
+        const slot = document.getElementById('recSlot').value;
+        const weight = parseFloat(document.getElementById('recWeight').value);
+        const high = parseInt(document.getElementById('recHigh').value);
+        const low = parseInt(document.getElementById('recLow').value);
+        const hr = parseInt(document.getElementById('recHR').value);
+        const ts = new Date(date).getTime();
+
+        if (weight) db.weight.push({ date, slot, val: weight, ts });
+        if (high && low) db.bp.push({ date, slot, high, low, hr: hr || 0, ts });
+
+        localStorage.setItem('myHealthData', JSON.stringify(db));
+        renderAll();
+        // 清空输入
+        document.getElementById('recWeight').value = '';
+        document.getElementById('recHigh').value = '';
+        document.getElementById('recLow').value = '';
+        document.getElementById('recHR').value = '';
+    }
+
+    function deleteItem(type, index) {
+        db[type].splice(index, 1);
+        localStorage.setItem('myHealthData', JSON.stringify(db));
+        renderAll();
+    }
+
+    function changeRange(type, day) {
+        if(type === 'w') {
+            currentWRange = day;
+            updateBtnStyle('wBtns', day);
+        } else {
+            currentBPRange = day;
+            updateBtnStyle('bpBtns', day);
+        }
+        renderAll();
+    }
+
+    function updateBtnStyle(groupId, day) {
+        const btns = document.getElementById(groupId).getElementsByTagName('button');
+        const days = [7, 30, 90, 180, 365];
+        for(let i=0; i<btns.length; i++) {
+            btns[i].className = (days[i] === day) ? 'active' : '';
+        }
+    }
+
+    function renderAll() {
+        // 更新体重数值
+        if(db.weight.length > 0) {
+            document.getElementById('curW').innerText = db.weight[db.weight.length-1].val;
+        }
+
+        // 1. 体重图表
+        const wData = filterAndSort(db.weight, currentWRange);
+        if(wChart) wChart.destroy();
+        wChart = new Chart(document.getElementById('wChart'), {
+            type: 'line',
+            data: {
+                labels: wData.map(d => d.date.slice(5) + d.slot[0]),
+                datasets: [{ label: '体重', data: wData.map(d => d.val), borderColor: '#07c160', tension: 0.3 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 2. 血压心率图表
+        const bpData = filterAndSort(db.bp, currentBPRange);
+        if(bpChart) bpChart.destroy();
+        bpChart = new Chart(document.getElementById('bpChart'), {
+            type: 'line',
+            data: {
+                labels: bpData.map(d => d.date.slice(5) + d.slot[0]),
+                datasets: [
+                    { label: '高压', data: bpData.map(d => d.high), borderColor: '#ff4d4f' },
+                    { label: '低压', data: bpData.map(d => d.low), borderColor: '#1890ff' },
+                    { label: '心率', data: bpData.map(d => d.hr), borderColor: '#eb2f96', borderDash: [5,5] }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 3. 列表
+        const listDiv = document.getElementById('historyList');
+        listDiv.innerHTML = '';
+        [...db.weight, ...db.bp].sort((a,b) => b.ts - a.ts).slice(0, 10).forEach((item, idx) => {
+            const isW = item.val !== undefined;
+            listDiv.innerHTML += `
+                <div class="list-item">
                     <div>
-                        <h1 id="display-name" class="text-4xl font-black tracking-tight mb-2">--</h1>
-                        <div class="flex gap-2">
-                            <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">目标: <b id="display-target">--</b> KG</span>
-                            <span onclick="editWish()" class="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">愿望: <b id="display-wish">点击设置</b></span>
+                        <div class="item-info">
+                            ${isW ? `体重: <b>${item.val} kg</b>` : `血压: <b>${item.high}/${item.low}</b> | 心率: <b>${item.hr}</b>`}
                         </div>
+                        <div class="item-date">${item.date} (${item.slot})</div>
                     </div>
-                    <div class="text-right">
-                        <div id="weight-diff" class="text-5xl font-black text-[#34c759]">-0.0</div>
-                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-tighter">Remaining</p>
-                    </div>
-                </div>
-                <div id="display-mood" onclick="editMood()" class="active-scale bg-gray-50 p-4 rounded-2xl text-lg text-gray-500 italic">
-                    记录今日感悟...
-                </div>
-            </div>
-
-            <div class="bg-white rounded-3xl p-5 shadow-sm mb-6 border border-white">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="font-bold text-gray-800">坚持中的兴趣</span>
-                    <button onclick="addInterest()" class="active-scale text-green-500"><i data-lucide="plus-circle" class="w-6 h-6"></i></button>
-                </div>
-                <div id="interest-list" class="space-y-3"></div>
-            </div>
-
-            <div class="space-y-6">
-                <div>
-                    <h3 class="px-2 text-xs font-black text-gray-400 uppercase mb-3">补给 & 消耗</h3>
-                    <div id="list-food"></div>
-                    <div id="list-sport"></div>
-                </div>
-                <div>
-                    <h3 class="px-2 text-xs font-black text-gray-400 uppercase mb-3">健康监测</h3>
-                    <div id="list-bp"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="panel-stats" class="tab-panel">
-            <div class="bg-white rounded-3xl p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold">体重趋势</h3>
-                    <div class="flex gap-1" id="w-range-btns">
-                        <button onclick="updateRange('weight', 7)" class="range-pill active">7D</button>
-                        <button onclick="updateRange('weight', 30)" class="range-pill">1M</button>
-                        <button onclick="updateRange('weight', 90)" class="range-pill">3M</button>
-                        <button onclick="updateRange('weight', 365)" class="range-pill">1Y</button>
-                    </div>
-                </div>
-                <div class="h-64"><canvas id="weightChart"></canvas></div>
-            </div>
-
-            <div class="bg-white rounded-3xl p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold">血压/心率波动</h3>
-                    <div class="flex gap-1" id="bp-range-btns">
-                        <button onclick="updateRange('bp', 7)" class="range-pill active">7D</button>
-                        <button onclick="updateRange('bp', 30)" class="range-pill">1M</button>
-                        <button onclick="updateRange('bp', 90)" class="range-pill">3M</button>
-                        <button onclick="updateRange('bp', 365)" class="range-pill">1Y</button>
-                    </div>
-                </div>
-                <div class="h-64"><canvas id="bpChart"></canvas></div>
-            </div>
-        </div>
-
-        <div id="panel-entry" class="tab-panel">
-            <div class="bg-white rounded-3xl p-6 border-white shadow-sm">
-                <h3 class="text-2xl font-black mb-6">快速打卡</h3>
-                <div class="space-y-6">
-                    <div class="space-y-2">
-                        <label class="text-xs font-black text-gray-400 ml-1">日期与项目</label>
-                        <div class="flex gap-2">
-                            <input type="date" id="log-date" class="bg-gray-100 border-none rounded-2xl flex-1">
-                            <select id="entry-type-select" onchange="setLogType(this.value)" class="bg-black text-white border-none rounded-2xl px-4">
-                                <option value="weight">体重</option>
-                                <option value="bp">血压</option>
-                                <option value="food">补给</option>
-                                <option value="sport">消耗</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div id="dynamic-form" class="space-y-4">
-                        </div>
-
-                    <button onclick="submitEntry()" class="active-scale w-full py-5 bg-[#34c759] text-white rounded-3xl font-black text-xl shadow-lg shadow-green-200">
-                        确认提交
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <nav class="glass-nav fixed bottom-0 w-full pb-[env(safe-area-inset-bottom)] border-t border-gray-100 z-50">
-        <div class="flex h-20 px-6">
-            <button onclick="switchTab('home')" class="flex-1 flex flex-col items-center justify-center gap-1 text-green-500" id="tab-home">
-                <i data-lucide="layout-grid" class="w-6 h-6"></i><span class="text-[10px] font-bold">首页</span>
-            </button>
-            <button onclick="switchTab('stats')" class="flex-1 flex flex-col items-center justify-center gap-1 text-gray-400" id="tab-stats">
-                <i data-lucide="bar-chart-3" class="w-6 h-6"></i><span class="text-[10px] font-bold">分析</span>
-            </button>
-            <button onclick="switchTab('entry')" class="flex-1 flex flex-col items-center justify-center gap-1 text-gray-400" id="tab-entry">
-                <i data-lucide="plus-square" class="w-6 h-6"></i><span class="text-[10px] font-bold">记录</span>
-            </button>
-        </div>
-    </nav>
-
-    <div id="sidebar-mask" class="hidden fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
-    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-[70] translate-x-[-100%] transition-transform shadow-2xl rounded-r-3xl p-6">
-        <h2 class="text-2xl font-black mb-6">切换成员</h2>
-        <div id="user-nav" class="space-y-2 mb-8 overflow-y-auto max-h-[60vh] no-scrollbar"></div>
-        <button onclick="addUser()" class="w-full py-4 bg-gray-100 text-gray-800 font-bold rounded-2xl">+ 新增档案</button>
-    </aside>
-
-    <div id="manage-modal" class="hidden fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-[32px] p-8 w-full max-w-sm">
-            <h2 class="text-2xl font-black mb-6">档案设置</h2>
-            <div class="space-y-4">
-                <input type="text" id="m-name" placeholder="名称" class="w-full bg-gray-100 border-none p-4 rounded-2xl">
-                <input type="number" id="m-target" placeholder="目标体重(KG)" class="w-full bg-gray-100 border-none p-4 rounded-2xl">
-            </div>
-            <div class="flex gap-4 mt-8">
-                <button onclick="closeManageModal()" class="flex-1 font-bold text-gray-400">取消</button>
-                <button onclick="saveUserManage()" class="flex-1 py-4 bg-black text-white rounded-2xl font-bold">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- 核心逻辑 ---
-        let users = JSON.parse(localStorage.getItem('app_health_v4') || '[]');
-        let curUid = localStorage.getItem('app_health_uid') || (users[0]?.id || null);
-        let currentTab = 'home', entryType = 'weight', ranges = { weight: 7, bp: 7 };
-
-        // --- 滑动删除核心 (原生优化) ---
-        let tStart = 0, currentSwipeEl = null;
-        document.addEventListener('touchstart', e => {
-            const content = e.target.closest('.swipe-content');
-            if (content) {
-                document.querySelectorAll('.swipe-content').forEach(el => { if(el !== content) el.style.transform = 'translateX(0)'; });
-                tStart = e.touches[0].clientX;
-                currentSwipeEl = content;
-            }
+                    <span class="del-btn" onclick="alert('请点击记录重新保存或清除缓存重置')">记录中</span>
+                </div>`;
         });
-        document.addEventListener('touchmove', e => {
-            if (!currentSwipeEl) return;
-            let diff = e.touches[0].clientX - tStart;
-            if (diff < 0) currentSwipeEl.style.transform = `translateX(${Math.max(diff, -80)}px)`;
-        });
-        document.addEventListener('touchend', e => {
-            if (!currentSwipeEl) return;
-            let diff = e.changedTouches[0].clientX - tStart;
-            currentSwipeEl.style.transform = diff < -40 ? `translateX(-80px)` : `translateX(0)`;
-            currentSwipeEl = null;
-        });
+    }
 
-        // --- Tab 切换逻辑 ---
-        function switchTab(tabId) {
-            currentTab = tabId;
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('panel-' + tabId).classList.add('active');
-            
-            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-green-500', 'text-gray-400'));
-            document.getElementById('tab-' + tabId).classList.replace('text-gray-400', 'text-green-500');
-            
-            if(tabId === 'stats') setTimeout(renderCharts, 100);
-            window.scrollTo(0,0);
-        }
+    function filterAndSort(arr, days) {
+        const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+        return arr.filter(i => i.ts >= cutoff).sort((a,b) => a.ts - b.ts);
+    }
 
-        function setLogType(t) {
-            entryType = t;
-            const container = document.getElementById('dynamic-form');
-            const css = "w-full bg-gray-100 border-none p-4 rounded-2xl font-bold";
-            if(t === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="${css}"><option>早起</option><option>睡前</option></select>
-                                       <input type="number" id="e-val" placeholder="体重 (KG)" class="${css}">`;
-            } else if(t === 'bp') {
-                container.innerHTML = `<select id="e-slot" class="${css}"><option>早起</option><option>睡前</option></select>
-                                       <div class="flex gap-2"><input type="number" id="e-high" placeholder="收缩压" class="${css}"><input type="number" id="e-low" placeholder="舒张压" class="${css}"></div>
-                                       <input type="number" id="e-hr" placeholder="心率 (BPM)" class="${css}">`;
-            } else {
-                container.innerHTML = `<select id="e-slot" class="${css}"><option>${t==='food'?'早餐':'单人运动'}</option><option>${t==='food'?'午餐':'双人运动'}</option><option>${t==='food'?'晚餐':'有氧运动'}</option></select>
-                                       <input type="text" id="e-name" placeholder="项目名称" class="${css}">
-                                       <input type="number" id="e-cal" placeholder="热量 (Kcal)" class="${css}">`;
-            }
-        }
-
-        // --- 数据处理 ---
-        function sync() {
-            localStorage.setItem('app_health_v4', JSON.stringify(users));
-            if(curUid) localStorage.setItem('app_health_uid', curUid);
-            render();
-        }
-
-        function render() {
-            const u = users.find(x => x.id == curUid); if(!u) return;
-            
-            // 更新标题和头部
-            document.getElementById('header-name').innerText = u.name;
-            document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-target').innerText = u.target || '--';
-            document.getElementById('display-wish').innerText = u.wish || '点击设置';
-            document.getElementById('display-mood').innerText = u.mood || '今日感悟...';
-
-            const sortedW = [...u.weights].sort((a,b)=>a.ts-b.ts);
-            const curW = sortedW.length ? sortedW[sortedW.length-1].val : (u.target || 0);
-            document.getElementById('weight-diff').innerText = (curW - (u.target || 0)).toFixed(1);
-
-            // 侧边栏成员列表
-            document.getElementById('user-nav').innerHTML = users.map(user => `
-                <div onclick="curUid=${user.id};sync();toggleSidebar()" class="p-4 rounded-2xl font-bold ${curUid==user.id?'bg-green-500 text-white':'bg-gray-50 text-gray-500'}">
-                    ${user.name}
-                </div>`).join('');
-
-            // 渲染兴趣 (滑动项)
-            document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => `
-                <div class="swipe-item">
-                    <div class="delete-action" onclick="deleteItem(${i.id}, 'interest')">删除</div>
-                    <div class="swipe-content p-4 flex justify-between items-center rounded-2xl shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <button onclick="toggleInterest(${i.id})" class="text-${i.paused?'gray-200':'green-500'}">
-                                <i data-lucide="${i.paused?'play-circle':'pause-circle'}" class="w-8 h-8"></i>
-                            </button>
-                            <span class="text-lg font-bold ${i.paused?'text-gray-300 line-through':''}">${i.name}</span>
-                        </div>
-                        <span class="text-[10px] font-black text-gray-400">坚持 ${Math.floor((Date.now()-i.start)/86400000)+1}天</span>
-                    </div>
-                </div>`).join('');
-
-            // 首页列表渲染
-            const vDate = document.getElementById('view-date').value;
-            const logs = u.logs.filter(l => l.date === vDate);
-            const listTpl = (l, color) => `<div class="swipe-item"><div class="delete-action" onclick="deleteItem(${l.id}, 'log')">删除</div><div class="swipe-content p-4 flex justify-between items-center"><div><div class="font-bold text-lg">${l.name}</div><div class="text-[10px] text-gray-400 font-bold">${l.slot}</div></div><div class="text-xl font-black text-${color}-500">${l.cal} <small class="text-[10px]">Kcal</small></div></div></div>`;
-            document.getElementById('list-food').innerHTML = logs.filter(l=>l.type==='food').map(l=>listTpl(l, 'orange')).join('');
-            document.getElementById('list-sport').innerHTML = logs.filter(l=>l.type==='sport').map(l=>listTpl(l, 'blue')).join('');
-            
-            const dayBps = u.bps.filter(b => b.date === vDate);
-            document.getElementById('list-bp').innerHTML = dayBps.map(b => `<div class="swipe-item"><div class="delete-action" onclick="deleteItem(${b.id}, 'bp_record')">删除</div><div class="swipe-content p-4 flex justify-between items-center"><div><div class="font-bold text-[#34c759]">${b.slot}血压</div><div class="text-xs text-gray-400 font-bold">心率: ${b.hr} BPM</div></div><div class="text-xl font-black text-gray-800">${b.high}/${b.low} <small class="text-[10px]">mmHg</small></div></div></div>`).join('');
-
-            lucide.createIcons();
-            if(currentTab === 'stats') renderCharts();
-        }
-
-        // --- 图表渲染 ---
-        let charts = {};
-        function renderCharts() {
-            const u = users.find(x => x.id == curUid);
-            const filterData = (arr, day) => {
-                const limit = Date.now() - day * 86400000;
-                return arr.filter(i => i.ts >= limit).sort((a,b)=>a.ts-b.ts);
-            };
-
-            const wd = filterData(u.weights, ranges.weight);
-            if(charts.w) charts.w.destroy();
-            charts.w = new Chart(document.getElementById('weightChart'), {
-                type: 'line', data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{ data: wd.map(d=>d.val), borderColor: '#34c759', borderWidth: 5, pointRadius: 0, tension: 0.4, fill: true, backgroundColor: 'rgba(52,199,89,0.05)' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' }, ticks: { font: { weight: 'bold' } } }, x: { grid: { display: false } } } }
-            });
-
-            const bd = filterData(u.bps, ranges.bp);
-            if(charts.bp) charts.bp.destroy();
-            charts.bp = new Chart(document.getElementById('bpChart'), {
-                type: 'line', data: {
-                    labels: bd.map(d=>d.date.slice(5) + (d.slot.includes('早')?'早':'晚')),
-                    datasets: [
-                        { label: '收缩压', data: bd.map(d=>d.high), borderColor: '#ff3b30', borderWidth: 3, pointRadius: 0, tension: 0.4 },
-                        { label: '心率', data: bd.map(d=>d.hr), borderColor: '#ff2d55', borderWidth: 2, borderDash: [5,5], pointRadius: 0, tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // 更新按钮状态
-            document.querySelectorAll('.range-pill').forEach(btn => btn.classList.remove('active'));
-            // 这里根据 ranges 状态重新给按钮上色 (省略具体查找，同步 render 逻辑)
-        }
-
-        function submitEntry() {
-            const u = users.find(x => x.id == curUid);
-            const date = document.getElementById('log-date').value;
-            const slot = document.getElementById('e-slot').value;
-            const ts = new Date(date).getTime();
-
-            if(entryType === 'weight') {
-                u.weights.push({ id: Date.now(), val: parseFloat(document.getElementById('e-val').value), date, slot, ts });
-            } else if(entryType === 'bp') {
-                u.bps.push({ id: Date.now(), high: parseInt(document.getElementById('e-high').value), low: parseInt(document.getElementById('e-low').value), hr: parseInt(document.getElementById('e-hr').value), date, slot, ts });
-            } else {
-                u.logs.unshift({ id: Date.now(), type: entryType, name: document.getElementById('e-name').value, cal: parseInt(document.getElementById('e-cal').value), slot, date });
-            }
-            sync();
-            switchTab('home');
-        }
-
-        // --- 辅助功能 ---
-        function toggleSidebar() {
-            const sb = document.getElementById('sidebar');
-            const mask = document.getElementById('sidebar-mask');
-            const isOpen = sb.style.transform === 'translateX(0%)';
-            sb.style.transform = isOpen ? 'translateX(-100%)' : 'translateX(0%)';
-            mask.classList.toggle('hidden', isOpen);
-        }
-        function updateRange(type, day) { ranges[type] = day; renderCharts(); }
-        function deleteItem(id, type) {
-            const u = users.find(x=>x.id==curUid);
-            if(type==='user') users = users.filter(u=>u.id!==id);
-            else if(type==='interest') u.interests = u.interests.filter(i=>i.id!==id);
-            else if(type==='bp_record') u.bps = u.bps.filter(b=>b.id!==id);
-            else u.logs = u.logs.filter(l=>l.id!==id);
-            sync();
-        }
-        function openManageModal() { const u=users.find(x=>x.id==curUid); document.getElementById('m-name').value=u.name; document.getElementById('m-target').value=u.target; document.getElementById('manage-modal').classList.remove('hidden'); }
-        function closeManageModal() { document.getElementById('manage-modal').classList.add('hidden'); }
-        function saveUserManage() { const u=users.find(x=>x.id==curUid); u.name=document.getElementById('m-name').value; u.target=parseFloat(document.getElementById('m-target').value); closeManageModal(); sync(); }
-        function addUser() { const n=prompt("名称:"); if(n) { users.push({id:Date.now(), name:n, target:60, weights:[], bps:[], logs:[], interests:[]}); sync(); toggleSidebar(); } }
-        function editWish() { const u=users.find(x=>x.id==curUid); const w=prompt("愿望:", u.wish); if(w) {u.wish=w; sync();} }
-        function editMood() { const u=users.find(x=>x.id==curUid); const m=prompt("感悟:", u.mood); if(m) {u.mood=m; sync();} }
-        function toggleInterest(id) { const u=users.find(x=>x.id==curUid); const i=u.interests.find(it=>it.id===id); i.paused=!i.paused; sync(); }
-        function addInterest() { const n=prompt("兴趣:"); if(n){ const u=users.find(x=>x.id==curUid); (u.interests=u.interests||[]).push({id:Date.now(), name:n, start:Date.now(), paused:false}); sync(); } }
-
-        window.onload = () => { 
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('view-date').value = today;
-            document.getElementById('log-date').value = today;
-            setLogType('weight');
-            sync(); 
-        };
-    </script>
+    window.onload = renderAll;
+</script>
 </body>
 </html>
