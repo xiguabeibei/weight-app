@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>SmartFit Pro v12</title>
+    <title>SmartFit Cyber v13</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,120 +14,150 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Nunito', 'PingFang SC', 'sans-serif'] }
+                    fontFamily: { sans: ['Orbitron', 'PingFang SC', 'sans-serif'] },
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
-        :root { --accent: #f472b6; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Nunito:wght@400;700;900&display=swap');
+        
+        :root { --accent: #00f2ff; } /* 科技青 */
         .theme-female { --accent: #f472b6; }
         .theme-male { --accent: #3b82f6; }
 
-        body { transition: background-color 0.4s; -webkit-tap-highlight-color: transparent; }
-        
-        /* 极致黑模式强制背景 */
-        .dark, .dark body { background-color: #000000 !important; color: #f8fafc; }
-        .dark aside, .dark main section, .dark .card-bg { background-color: #0f0f0f !important; border-color: #1f1f1f !important; }
+        body { 
+            transition: background-color 0.4s; 
+            -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,0,0,0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
 
-        .btn-accent { background-color: var(--accent); color: white; }
+        /* 极致黑模式 + 科技感背景 */
+        .dark body { 
+            background-color: #000000 !important; 
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            color: #00f2ff; 
+        }
+        
+        .dark aside, .dark section, .dark .card-bg { 
+            background-color: rgba(10, 10, 10, 0.8) !important; 
+            border: 1px solid rgba(0, 242, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-accent { background-color: var(--accent); color: #000; font-weight: 900; }
         .text-accent { color: var(--accent); }
-        .sidebar-active { background-color: var(--accent); color: white !important; }
+        .sidebar-active { 
+            background: linear-gradient(90deg, var(--accent), transparent);
+            color: #000 !important;
+            border-left: 4px solid var(--accent);
+        }
         
         /* 侧滑系统 */
         .swipe-container { position: relative; overflow: hidden; touch-action: pan-x; }
         .swipe-content { position: relative; z-index: 20; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); background: inherit; }
         .delete-action { 
             position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
-            background: #ff3b30; color: white; display: flex; align-items: center;
-            justify-content: center; z-index: 10; font-weight: 800; font-size: 13px;
-            border-radius: 0 1.2rem 1.2rem 0;
+            background: #ff0055; color: white; display: flex; align-items: center;
+            justify-content: center; z-index: 10; font-weight: 800; font-size: 11px;
+            text-transform: uppercase;
         }
 
-        /* 动画圆点 */
-        @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.7); } }
-        .dot-active { background-color: var(--accent); width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin: 1.5px; animation: pulse-dot 2s infinite; }
-        .dot-paused { background-color: #334155; width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin: 1.5px; }
+        /* 扫描线动画 */
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scan-line {
+            position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.05), transparent);
+            animation: scan 4s linear infinite;
+        }
+
+        .dot-active { background-color: var(--accent); width: 6px; height: 6px; border-radius: 1px; display: inline-block; margin: 1.5px; box-shadow: 0 0 5px var(--accent); }
+        .dot-paused { background-color: #333; width: 6px; height: 6px; border-radius: 1px; display: inline-block; margin: 1.5px; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        input, select, textarea { outline: none; }
+        input, select, textarea { border: 1px solid rgba(0,242,255,0.1) !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 flex h-screen overflow-hidden">
 
-    <aside class="w-72 m-4 mr-0 flex flex-col p-6 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 transition-colors duration-300">
+    <aside class="w-72 m-4 mr-0 flex flex-col p-6 bg-white rounded-3xl shadow-xl border border-slate-200 z-30">
         <div class="flex items-center gap-3 mb-10 px-2">
-            <div class="w-10 h-10 rounded-2xl btn-accent flex items-center justify-center shadow-lg"><i data-lucide="zap"></i></div>
-            <h1 class="font-900 text-xl tracking-tighter">SmartFit</h1>
+            <div class="w-10 h-10 rounded-lg btn-accent flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                <i data-lucide="terminal"></i>
+            </div>
+            <h1 class="font-900 text-xl tracking-[0.2em] uppercase italic">Fit_OS</h1>
         </div>
         
         <nav id="user-nav" class="flex-1 space-y-2 overflow-y-auto no-scrollbar"></nav>
 
-        <div class="mt-4 p-1 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex">
-            <button onclick="setThemeMode('light')" id="btn-light" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="sun" class="w-4 h-4"></i></button>
-            <button onclick="setThemeMode('dark')" id="btn-dark" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="moon" class="w-4 h-4"></i></button>
-            <button onclick="setThemeMode('auto')" id="btn-auto" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="monitor" class="w-4 h-4"></i></button>
+        <div class="mt-4 p-1 bg-slate-100 dark:bg-zinc-900 rounded-xl flex gap-1">
+            <button onclick="setThemeMode('light')" id="btn-light" class="flex-1 py-2 rounded-lg flex justify-center transition-all"><i data-lucide="sun" class="w-4 h-4"></i></button>
+            <button onclick="setThemeMode('dark')" id="btn-dark" class="flex-1 py-2 rounded-lg flex justify-center transition-all"><i data-lucide="moon" class="w-4 h-4"></i></button>
         </div>
 
         <div class="pt-6 mt-4 border-t border-slate-100 dark:border-zinc-800 space-y-2">
-            <button onclick="addUser()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增用户</button>
-            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="settings" class="w-4 h-4"></i> 档案设置</button>
+            <button onclick="addUser()" class="w-full p-4 rounded-xl text-slate-400 hover:text-accent flex items-center gap-3 text-xs font-black transition-all uppercase tracking-widest"><i data-lucide="user-plus" class="w-4 h-4"></i> NEW_USER</button>
+            <button onclick="openManageModal()" class="w-full p-4 rounded-xl text-slate-400 hover:text-accent flex items-center gap-3 text-xs font-black transition-all uppercase tracking-widest"><i data-lucide="cpu" class="w-4 h-4"></i> CONFIG</button>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar">
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar relative">
+        <div class="scan-line"></div>
         <div class="max-w-6xl mx-auto space-y-6">
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <section class="lg:col-span-7 bg-white rounded-[3rem] p-8 min-h-[340px] flex flex-col justify-between shadow-sm border border-slate-100 card-bg">
-                    <div class="flex justify-between items-start">
+                <section class="lg:col-span-7 bg-white rounded-[2rem] p-8 min-h-[340px] flex flex-col justify-between shadow-2xl card-bg relative overflow-hidden">
+                    <div class="flex justify-between items-start z-10">
                         <div>
-                            <div class="flex items-center gap-4 mb-4">
-                                <h2 id="display-name" class="text-5xl font-900 tracking-tighter">--</h2>
-                                <div id="display-gender-icon" class="p-2 bg-slate-50 dark:bg-zinc-800 rounded-full"></div>
+                            <div class="flex items-center gap-4 mb-2">
+                                <h2 id="display-name" class="text-5xl font-900 tracking-tighter uppercase italic">--</h2>
+                                <div id="display-gender-icon" class="p-2 border border-accent/20 rounded-lg"></div>
                             </div>
-                            <p id="display-wish" class="text-sm font-black italic text-accent opacity-90 uppercase tracking-widest">--</p>
+                            <p id="display-wish" class="text-[10px] font-black italic text-accent opacity-90 tracking-[0.3em]">INITIATING...</p>
                         </div>
                         <div class="text-right">
-                            <span id="status-tag" class="text-6xl font-black tracking-tighter">0.0</span>
-                            <p class="text-[10px] font-black text-slate-300 dark:text-zinc-600 uppercase tracking-widest mt-1">KG TO GOAL</p>
+                            <span id="status-tag" class="text-6xl font-900 tracking-tighter font-mono">0.0</span>
+                            <p class="text-[10px] font-black text-slate-300 dark:text-cyan-900 uppercase tracking-widest mt-1">DELTA_WEIGHT</p>
                         </div>
                     </div>
-                    <div class="mt-6">
-                        <h3 id="quote-title" class="text-2xl font-900 mb-1 tracking-tight">准备开始...</h3>
-                        <p id="quote-desc" class="text-sm font-bold text-slate-400">正在同步您的健康数据。</p>
+                    <div class="mt-6 z-10">
+                        <h3 id="quote-title" class="text-xl font-900 mb-1 tracking-widest uppercase text-accent">SYSTEM_READY</h3>
+                        <p id="quote-desc" class="text-xs font-bold text-slate-400 tracking-tight">等待输入健康指令...</p>
                     </div>
-                    <div id="mood-display" class="mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 text-sm font-bold italic text-slate-500 border border-transparent dark:border-zinc-800">心情: --</div>
+                    <div id="mood-display" class="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-cyan-950/20 text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-transparent dark:border-accent/10">LOG: --</div>
                 </section>
 
-                <section class="lg:col-span-5 bg-white rounded-[3rem] p-8 flex flex-col shadow-sm border border-slate-100 card-bg">
+                <section class="lg:col-span-5 bg-white rounded-[2rem] p-8 flex flex-col shadow-2xl card-bg">
                     <div class="flex justify-between items-center mb-6 px-2">
-                        <h4 class="font-900 flex items-center gap-2"><i data-lucide="target" class="text-orange-500 w-5 h-5"></i> 近日兴趣</h4>
-                        <button onclick="addInterest()" class="btn-accent w-8 h-8 rounded-full flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        <h4 class="font-900 text-xs tracking-widest uppercase flex items-center gap-2"><i data-lucide="activity" class="text-accent"></i> HABIT_MATRIX</h4>
+                        <button onclick="addInterest()" class="btn-accent w-8 h-8 rounded-lg flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4"></i></button>
                     </div>
                     <div id="interest-list" class="space-y-3 overflow-y-auto no-scrollbar flex-1 max-h-[220px]"></div>
                 </section>
             </div>
 
-            <section class="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100 card-bg">
+            <section class="bg-white rounded-[2rem] p-8 shadow-2xl card-bg">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xs font-black text-slate-300 dark:text-zinc-600 uppercase tracking-widest">Trend Analytics</h3>
-                    <div class="flex gap-2 bg-slate-100 dark:bg-zinc-800 p-1.5 rounded-2xl border border-transparent dark:border-zinc-700">
-                        <input type="date" id="chart-start" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-zinc-300">
-                        <input type="date" id="chart-end" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-zinc-300">
+                    <h3 class="text-[10px] font-black text-slate-300 dark:text-cyan-900 uppercase tracking-[0.4em]">Biometric_Waveform</h3>
+                    <div class="flex gap-2 p-1.5 bg-slate-100 dark:bg-zinc-900 rounded-lg">
+                        <input type="date" id="chart-start" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-accent">
+                        <input type="date" id="chart-end" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-accent">
                     </div>
                 </div>
                 <div class="h-64 w-full"><canvas id="weightChart"></canvas></div>
             </section>
 
-            <section class="bg-white rounded-[3rem] p-8 shadow-md border border-slate-100 card-bg">
+            <section class="bg-white rounded-[2rem] p-8 shadow-2xl card-bg">
                 <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
-                    <input type="date" id="global-date" onchange="render()" class="font-black text-accent bg-transparent text-lg">
-                    <div class="flex gap-1 p-1 bg-slate-100 dark:bg-zinc-800 rounded-2xl">
-                        <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">体重</button>
-                        <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">饮食</button>
-                        <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">运动</button>
+                    <input type="date" id="global-date" onchange="render()" class="font-900 text-accent bg-transparent text-lg tracking-widest">
+                    <div class="flex gap-1 p-1 bg-slate-100 dark:bg-zinc-900 rounded-xl">
+                        <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2 rounded-lg font-900 text-xs tracking-widest transition-all">WEIGHT</button>
+                        <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2 rounded-lg font-900 text-xs tracking-widest transition-all">INTAKE</button>
+                        <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2 rounded-lg font-900 text-xs tracking-widest transition-all">BURN</button>
                     </div>
                 </div>
                 <div id="entry-form" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
@@ -140,89 +170,81 @@
         </div>
     </main>
 
-    <div id="manage-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-6">
-        <div class="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 w-full max-w-2xl border border-white/10 shadow-2xl">
-            <h2 class="text-3xl font-900 mb-8 dark:text-white">档案设置</h2>
+    <div id="manage-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-black rounded-[2rem] p-10 w-full max-w-2xl border border-accent/30 shadow-[0_0_50px_rgba(0,242,255,0.1)]">
+            <h2 class="text-xl font-900 mb-8 dark:text-accent tracking-widest uppercase">Kernel_Config</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input type="text" id="m-name" placeholder="姓名" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700">
-                <select id="m-gender" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700"><option value="female">女生</option><option value="male">男生</option></select>
-                <input type="number" id="m-target" placeholder="目标体重" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700">
-                <input type="text" id="m-wish" placeholder="你的减重愿望" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700">
-                <textarea id="m-mood" placeholder="此刻的心情..." class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white h-24 md:col-span-2 border border-transparent dark:border-zinc-700"></textarea>
+                <input type="text" id="m-name" placeholder="IDENTIFIER" class="bg-slate-50 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white">
+                <select id="m-gender" class="bg-slate-50 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white"><option value="female">FEMALE</option><option value="male">MALE</option></select>
+                <input type="number" id="m-target" placeholder="TARGET_KG" class="bg-slate-50 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white">
+                <input type="text" id="m-wish" placeholder="OBJECTIVE" class="bg-slate-50 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white">
+                <textarea id="m-mood" placeholder="STATUS_UPDATE..." class="bg-slate-50 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white h-24 md:col-span-2"></textarea>
             </div>
             <div class="flex gap-4 mt-10">
-                <button onclick="closeManageModal()" class="flex-1 font-black text-slate-400">取消</button>
-                <button onclick="saveUserManage()" class="flex-1 p-5 btn-accent rounded-3xl font-black shadow-lg">确认保存</button>
+                <button onclick="closeManageModal()" class="flex-1 font-black text-slate-400 text-xs tracking-widest">ABORT</button>
+                <button onclick="saveUserManage()" class="flex-1 p-5 btn-accent rounded-xl shadow-[0_0_20px_rgba(0,242,255,0.4)] text-xs tracking-widest">DEPLOY_CHANGES</button>
             </div>
         </div>
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('sf_v12') || '[]');
-        let curUid = localStorage.getItem('sf_uid_v12') || (users[0]?.id || null);
-        let themeMode = localStorage.getItem('sf_theme') || 'auto';
+        let users = JSON.parse(localStorage.getItem('sf_v13') || '[]');
+        let curUid = localStorage.getItem('sf_uid_v13') || (users[0]?.id || null);
+        let themeMode = localStorage.getItem('sf_theme') || 'dark'; // 默认改为暗色更科技
         let entryType = 'weight', chart = null;
 
-        // 初始化日期显示
-        const getToday = () => new Date().toISOString().split('T')[0];
-        document.getElementById('global-date').value = getToday();
-        document.getElementById('chart-end').value = getToday();
+        document.getElementById('global-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('chart-end').value = new Date().toISOString().split('T')[0];
         document.getElementById('chart-start').value = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
 
-        // 核心侧滑逻辑 (采用动态委托监听，解决重绘失效)
-        let touchStartPos = 0;
-        document.addEventListener('touchstart', e => {
-            const container = e.target.closest('.swipe-container');
-            if (container) touchStartPos = e.touches[0].clientX;
-        }, {passive: true});
-
+        // 侧滑删除 (委托监听)
+        let tStart = 0;
+        document.addEventListener('touchstart', e => { if(e.target.closest('.swipe-container')) tStart = e.touches[0].clientX; }, {passive:true});
         document.addEventListener('touchmove', e => {
-            const container = e.target.closest('.swipe-container');
-            if (!container) return;
-            const content = container.querySelector('.swipe-content');
-            const diff = e.touches[0].clientX - touchStartPos;
-            if (diff < 0 && diff > -100) content.style.transform = `translateX(${diff}px)`;
-        }, {passive: true});
-
+            const c = e.target.closest('.swipe-container');
+            if(!c) return;
+            const diff = e.touches[0].clientX - tStart;
+            if(diff < 0 && diff > -100) c.querySelector('.swipe-content').style.transform = `translateX(${diff}px)`;
+        }, {passive:true});
         document.addEventListener('touchend', e => {
-            const container = e.target.closest('.swipe-container');
-            if (!container) return;
-            const content = container.querySelector('.swipe-content');
-            const diff = e.changedTouches[0].clientX - touchStartPos;
-            content.style.transform = diff < -40 ? `translateX(-80px)` : `translateX(0)`;
+            const c = e.target.closest('.swipe-container');
+            if(!c) return;
+            const diff = e.changedTouches[0].clientX - tStart;
+            c.querySelector('.swipe-content').style.transform = diff < -40 ? `translateX(-80px)` : `translateX(0)`;
         });
 
-        function setThemeMode(m) { themeMode = m; localStorage.setItem('sf_theme', m); applyThemeMode(); }
+        function setThemeMode(m) {
+            themeMode = m;
+            localStorage.setItem('sf_theme', m);
+            applyThemeMode();
+        }
 
         function applyThemeMode() {
-            const isDark = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', isDark);
-            
-            ['light', 'dark', 'auto'].forEach(id => {
+            document.documentElement.classList.toggle('dark', themeMode === 'dark');
+            ['light', 'dark'].forEach(id => {
                 const el = document.getElementById('btn-'+id);
-                el.className = themeMode === id ? "flex-1 py-2 rounded-xl flex justify-center bg-white dark:bg-zinc-700 text-accent shadow-sm" : "flex-1 py-2 rounded-xl flex justify-center text-slate-400";
+                el.className = themeMode === id ? "flex-1 py-2 rounded-lg flex justify-center bg-accent text-black shadow-[0_0_15px_rgba(0,242,255,0.5)]" : "flex-1 py-2 rounded-lg flex justify-center text-slate-400 hover:text-accent";
             });
             if(chart) renderChart();
         }
 
         function sync() {
-            localStorage.setItem('sf_v12', JSON.stringify(users));
-            if(curUid) localStorage.setItem('sf_uid_v12', curUid);
-            applyThemeMode();
-            render();
+            localStorage.setItem('sf_v13', JSON.stringify(users));
+            if(curUid) localStorage.setItem('sf_uid_v13', curUid);
+            applyThemeMode(); render();
         }
 
         function addUser() {
-            const name = prompt("输入新成员姓名:"); if(!name) return;
+            const name = prompt("IDENTIFIER:"); if(!name) return;
             const u = { id: Date.now(), name, target: 60, gender: 'female', weights: [], logs: [], interests: [] };
             users.push(u); curUid = u.id; sync();
         }
 
         function deleteUser(uid, e) {
             e.stopPropagation();
-            if(confirm('确定要移除该用户的所有记录吗？')) {
+            if(confirm('TERMINATE USER DATA?')) {
                 users = users.filter(u => u.id !== uid);
-                if(curUid == uid) curUid = users[0]?.id || null;
+                curUid = users[0]?.id || null;
                 sync();
             }
         }
@@ -231,7 +253,6 @@
             e.stopPropagation();
             const u = users.find(x => x.id == curUid);
             if(listType === 'interest') u.interests = u.interests.filter(i => i.id !== id);
-            else if(listType === 'weight') u.weights = u.weights.filter(w => w.id !== id);
             else u.logs = u.logs.filter(l => l.id !== id);
             sync();
         }
@@ -246,7 +267,7 @@
 
         function addInterest() {
             const u = users.find(x => x.id == curUid); if(!u) return;
-            const name = prompt("想养成什么新习惯？");
+            const name = prompt("NEW HABIT CORE:");
             if(name) { u.interests.push({ id: Date.now(), name, start: Date.now(), status: 'active' }); sync(); }
         }
 
@@ -254,70 +275,57 @@
             const uNav = document.getElementById('user-nav');
             uNav.innerHTML = users.map(u => `
                 <div class="swipe-container group">
-                    <div class="delete-action" onclick="deleteUser(${u.id}, event)">删除</div>
-                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-4 rounded-2xl flex items-center justify-between cursor-pointer ${curUid == u.id ? 'sidebar-active shadow-lg' : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-50 dark:hover:bg-zinc-800'}">
-                        <span class="font-black">${u.name}</span>
-                        <i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-4 h-4 opacity-40"></i>
+                    <div class="delete-action" onclick="deleteUser(${u.id}, event)">DELETE</div>
+                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-4 rounded-xl flex items-center justify-between cursor-pointer ${curUid == u.id ? 'sidebar-active' : 'text-slate-400 hover:text-accent'}">
+                        <span class="font-black text-xs tracking-widest uppercase">${u.name}</span>
+                        <i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-3 h-3 opacity-40"></i>
                     </div>
                 </div>`).join('');
             
             const u = users.find(x => x.id == curUid); 
-            if(!u) {
-                document.getElementById('display-name').innerText = "未选择";
-                return;
-            }
+            if(!u) return;
 
             document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-wish').innerText = u.wish || 'DISCIPLINE YOURSELF';
-            document.getElementById('mood-display').innerText = `心情: ${u.mood || '记录下今天的心情吧...'}`;
-            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
+            document.getElementById('display-wish').innerText = u.wish || 'CORE_MISSION_PENDING';
+            document.getElementById('mood-display').innerText = `STATUS_LOG: ${u.mood || 'STABLE'}`;
+            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-5 h-5 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
             
-            // 兴趣列表
             document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
-                const active = i.status === 'active';
-                const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
+                const active = i.status === 'active', days = Math.floor((Date.now()-i.start)/86400000)+1;
                 return `
                 <div class="swipe-container">
-                    <div class="delete-action" onclick="deleteItem(${i.id}, 'interest', event)">删除</div>
-                    <div class="swipe-content p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/80 border border-transparent dark:border-zinc-700">
+                    <div class="delete-action" onclick="deleteItem(${i.id}, 'interest', event)">WIPE</div>
+                    <div class="swipe-content p-4 rounded-xl dark:bg-zinc-900/50 border border-white/5">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-900 ${active?'dark:text-white':'text-slate-400'}">${i.name}</span>
-                            <button onclick="toggleInterest(${i.id}, event)"><i data-lucide="${active?'pause-circle':'play-circle'}" class="w-4 h-4 text-accent"></i></button>
+                            <span class="text-[10px] font-black tracking-widest ${active?'text-accent':'text-slate-600'}">${i.name}</span>
+                            <button onclick="toggleInterest(${i.id}, event)"><i data-lucide="${active?'activity':'slash'}" class="w-4 h-4 text-accent"></i></button>
                         </div>
-                        <div class="flex flex-wrap">${Array.from({length: Math.min(days, 20)}).map(() => `<span class="${active ? 'dot-active' : 'dot-paused'}"></span>`).join('')}</div>
+                        <div class="flex flex-wrap">${Array.from({length:Math.min(days,15)}).map(()=>`<span class="${active?'dot-active':'dot-paused'}"></span>`).join('')}</div>
                     </div>
                 </div>`;
-            }).join('') || '<div class="text-center py-10 text-xs text-slate-300">暂无兴趣</div>';
+            }).join('');
 
-            // 饮食/运动
             const gDate = document.getElementById('global-date').value;
             const logs = u.logs.filter(l => l.date === gDate);
             const logTpl = (l, color) => `
                 <div class="swipe-container">
-                    <div class="delete-action" onclick="deleteItem(${l.id}, 'log', event)">删除</div>
-                    <div class="swipe-content p-4 rounded-3xl bg-${color}-500/5 border border-${color}-500/10 flex justify-between items-center">
+                    <div class="delete-action" onclick="deleteItem(${l.id}, 'log', event)">WIPE</div>
+                    <div class="swipe-content p-4 rounded-xl bg-${color}-500/5 border border-${color}-500/10 flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center text-${color}-500 shadow-sm"><i data-lucide="zap" class="w-5 h-5"></i></div>
-                            <div><div class="font-900 text-sm dark:text-white">${l.name}</div><div class="text-[9px] text-slate-400 font-bold uppercase">${l.slot}</div></div>
+                            <div class="w-10 h-10 rounded bg-black flex items-center justify-center text-accent shadow-[0_0_10px_rgba(0,242,255,0.2)]"><i data-lucide="hash" class="w-4 h-4"></i></div>
+                            <div><div class="font-900 text-xs tracking-widest dark:text-white uppercase">${l.name}</div><div class="text-[8px] text-slate-500 font-bold uppercase">${l.slot}</div></div>
                         </div>
-                        <div class="text-right"><div class="font-900 text-sm dark:text-white">${l.cal}</div><div class="text-[8px] text-slate-400 uppercase font-black">kcal</div></div>
+                        <div class="text-right"><div class="font-900 text-xs text-accent">${l.cal}</div><div class="text-[7px] text-slate-500 font-black tracking-tighter uppercase">UNIT_KCAL</div></div>
                     </div>
                 </div>`;
             
-            document.getElementById('list-food').innerHTML = `<h4 class="text-[10px] font-black uppercase tracking-widest text-emerald-500 px-4 mb-2">Food Log</h4>` + (logs.filter(l=>l.type==='food').map(l=>logTpl(l, 'emerald')).join('') || '<div class="p-8 border-2 border-dashed border-slate-100 dark:border-zinc-800 rounded-[2rem] text-center text-xs text-slate-300 uppercase">No Records</div>');
-            document.getElementById('list-sport').innerHTML = `<h4 class="text-[10px] font-black uppercase tracking-widest text-blue-500 px-4 mb-2">Sport Log</h4>` + (logs.filter(l=>l.type==='sport').map(l=>logTpl(l, 'blue')).join('') || '<div class="p-8 border-2 border-dashed border-slate-100 dark:border-zinc-800 rounded-[2rem] text-center text-xs text-slate-300 uppercase">No Records</div>');
+            document.getElementById('list-food').innerHTML = `<h4 class="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500 px-2 mb-2">>> INTAKE_STREAM</h4>` + logs.filter(l=>l.type==='food').map(l=>logTpl(l, 'emerald')).join('');
+            document.getElementById('list-sport').innerHTML = `<h4 class="text-[8px] font-black uppercase tracking-[0.3em] text-blue-500 px-2 mb-2">>> BURN_STREAM</h4>` + logs.filter(l=>l.type==='sport').map(l=>logTpl(l, 'blue')).join('');
 
-            // 体重差距与激励语
             const curW = u.weights.length > 0 ? [...u.weights].sort((a,b)=>a.ts-b.ts).pop().val : u.target;
             const diff = (curW - u.target).toFixed(1);
-            const statusTag = document.getElementById('status-tag');
-            statusTag.innerText = (diff > 0 ? "+" : "") + diff;
-            statusTag.className = `text-6xl font-black tracking-tighter ${diff <= 0 ? 'text-emerald-500' : 'dark:text-white'}`;
+            document.getElementById('status-tag').innerText = (diff > 0 ? "+" : "") + diff;
             
-            const q = diff > 5 ? ["坚持，是唯一的路", "虽然还有距离，但每一克消失的体重都是勋章。"] : diff > 0 ? ["胜利就在眼前", "你离目标已经非常接近了，保持节奏！"] : ["你已经是自己的英雄", "完美达标，接下来是享受自律带来的自由。"];
-            document.getElementById('quote-title').innerText = q[0];
-            document.getElementById('quote-desc').innerText = q[1];
-
             renderEntryForm(); renderChart(); lucide.createIcons();
         }
 
@@ -326,27 +334,24 @@
             const container = document.getElementById('entry-form');
             ['weight', 'food', 'sport'].forEach(t => {
                 const btn = document.getElementById('tab-'+t);
-                btn.className = entryType === t ? "px-6 py-2 rounded-xl font-900 text-sm bg-accent text-white shadow-lg shadow-pink-500/20" : "px-6 py-2 rounded-xl font-900 text-sm text-slate-400 dark:text-zinc-500";
+                btn.className = entryType === t ? "px-6 py-2 rounded-lg font-900 text-[10px] bg-accent text-black shadow-[0_0_15px_rgba(0,242,255,0.3)]" : "px-6 py-2 rounded-lg font-900 text-[10px] text-slate-400";
             });
 
             if(entryType === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重 kg" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold md:col-span-2 dark:text-white border border-transparent dark:border-zinc-700"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">保存记录</button>`;
+                container.innerHTML = `<select id="e-slot" class="bg-slate-100 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white text-xs"><option value="morning">AM</option><option value="evening">PM</option></select><input type="number" id="e-val" step="0.1" placeholder="KG" class="bg-slate-100 dark:bg-zinc-900 p-4 rounded-xl font-bold md:col-span-2 dark:text-white text-xs"><button onclick="submitEntry()" class="btn-accent p-4 rounded-xl text-xs uppercase shadow-lg">PUSH_DATA</button>`;
             } else {
-                const slots = entryType === 'food' ? ["早餐","午餐","晚餐","额外"] : ["有氧","无氧","拉伸"];
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700">${slots.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><input type="text" id="e-name" placeholder="内容描述" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white border border-transparent dark:border-zinc-700"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">添加记录</button>`;
+                const slots = entryType === 'food' ? ["MEAL_1","MEAL_2","MEAL_3","SNACK"] : ["CARDIO","POWER","STRETCH"];
+                container.innerHTML = `<select id="e-slot" class="bg-slate-100 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white text-xs">${slots.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><input type="text" id="e-name" placeholder="DESC" class="bg-slate-100 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white text-xs"><input type="number" id="e-cal" placeholder="KCAL" class="bg-slate-100 dark:bg-zinc-900 p-4 rounded-xl font-bold dark:text-white text-xs"><button onclick="submitEntry()" class="btn-accent p-4 rounded-xl text-xs uppercase shadow-lg">PUSH_DATA</button>`;
             }
         }
 
         function submitEntry() {
             const u = users.find(x => x.id == curUid); if(!u) return;
             const date = document.getElementById('global-date').value;
-            const slot = document.getElementById('e-slot').value;
             if(entryType === 'weight') {
-                const val = parseFloat(document.getElementById('e-val').value);
-                if(val) u.weights.push({ id: Date.now(), val, slot, date, ts: new Date(date).getTime() });
+                u.weights.push({ id: Date.now(), val: parseFloat(document.getElementById('e-val').value), slot: document.getElementById('e-slot').value, date, ts: new Date(date).getTime() });
             } else {
-                const name = document.getElementById('e-name').value, cal = parseInt(document.getElementById('e-cal').value);
-                if(name && cal) u.logs.unshift({ id: Date.now(), type: entryType, name, cal, slot, date });
+                u.logs.unshift({ id: Date.now(), type: entryType, name: document.getElementById('e-name').value, cal: parseInt(document.getElementById('e-cal').value), slot: document.getElementById('e-slot').value, date });
             }
             sync();
         }
@@ -355,41 +360,37 @@
             const u = users.find(x => x.id == curUid); if(!u || !u.weights.length) return;
             const ctx = document.getElementById('weightChart').getContext('2d');
             if(chart) chart.destroy();
-            const sorted = [...u.weights].sort((a,b)=>a.ts-b.ts).slice(-10);
+            const sorted = [...u.weights].sort((a,b)=>a.ts-b.ts).slice(-12);
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: sorted.map(x => x.date.split('-').slice(1).join('/')),
                     datasets: [{ 
                         data: sorted.map(x=>x.val), 
-                        borderColor: getComputedStyle(document.body).getPropertyValue('--accent'), 
-                        borderWidth: 4, tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#fff',
-                        backgroundColor: 'rgba(244, 114, 182, 0.05)'
+                        borderColor: '#00f2ff', 
+                        borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#00f2ff',
+                        backgroundColor: 'rgba(0, 242, 255, 0.03)'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#666', font: { size: 10, weight: 'bold' } } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { color: 'rgba(0,242,255,0.05)' }, ticks: { color: '#00f2ff', font: { size: 9, family: 'Orbitron' } } } } }
             });
         }
 
         function openManageModal() {
             const u = users.find(x => x.id == curUid); if(!u) return;
-            ['m-name', 'm-gender', 'm-target', 'm-wish', 'm-mood'].forEach(id => {
-                document.getElementById(id).value = u[id.split('-')[1]] || '';
-            });
+            ['m-name', 'm-gender', 'm-target', 'm-wish', 'm-mood'].forEach(id => document.getElementById(id).value = u[id.split('-')[1]] || '');
             document.getElementById('manage-modal').classList.remove('hidden');
         }
         function closeManageModal() { document.getElementById('manage-modal').classList.add('hidden'); }
         function saveUserManage() {
             const u = users.find(x => x.id == curUid);
-            u.name = document.getElementById('m-name').value;
-            u.gender = document.getElementById('m-gender').value;
+            u.name = document.getElementById('m-name').value; u.gender = document.getElementById('m-gender').value;
             u.target = parseFloat(document.getElementById('m-target').value);
-            u.wish = document.getElementById('m-wish').value;
-            u.mood = document.getElementById('m-mood').value;
+            u.wish = document.getElementById('m-wish').value; u.mood = document.getElementById('m-mood').value;
             closeManageModal(); sync();
         }
 
-        window.onload = () => { applyThemeMode(); sync(); };
+        window.onload = sync;
     </script>
 </body>
 </html>
