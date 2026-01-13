@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="SmartFit">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3034/3034875.png">
 
-    <title>SmartFit Elite v9</title>
+    <title>SmartFit Elite v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -45,6 +45,16 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        /* 修复按钮遮挡问题的特定样式 */
+        .tab-container {
+            background-color: #f1f5f9; /* 稍微深一点的灰色，确保在纯白背景下可见 */
+            border: 1px solid #e2e8f0;
+        }
+        .dark .tab-container {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex h-screen overflow-hidden">
@@ -90,13 +100,11 @@
                                 <p class="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mt-1">KG TO GOAL</p>
                             </div>
                         </div>
-                        
                         <div class="mt-8">
                             <h3 id="quote-title" class="text-2xl font-900 text-slate-800 dark:text-slate-100 mb-1">正在加载...</h3>
                             <p id="quote-desc" class="text-sm font-bold text-slate-400 dark:text-slate-500">加油，每一滴汗水都有意义。</p>
                         </div>
                     </div>
-                    
                     <div id="mood-display" class="mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-sm font-bold italic text-slate-500 dark:text-slate-400">
                         今日心情: --
                     </div>
@@ -114,21 +122,24 @@
             <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-xs font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Analytic Trend</h3>
-                    <div class="flex gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl">
-                        <input type="date" id="chart-start" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white">
-                        <input type="date" id="chart-end" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white">
+                    <div class="flex gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <input type="date" id="chart-start" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white outline-none">
+                        <input type="date" id="chart-end" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white outline-none">
                     </div>
                 </div>
                 <div class="h-64 w-full"><canvas id="weightChart"></canvas></div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-                    <input type="date" id="global-date" onchange="render()" class="font-black text-accent bg-transparent">
-                    <div class="flex gap-2 p-1 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-                        <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">体重</button>
-                        <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">饮食</button>
-                        <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2 rounded-xl font-900 text-sm transition-all">运动</button>
+            <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-md border border-slate-100 dark:border-slate-800">
+                <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
+                    <div class="flex items-center gap-2">
+                         <i data-lucide="calendar" class="w-4 h-4 text-accent"></i>
+                         <input type="date" id="global-date" onchange="render()" class="font-black text-accent bg-transparent outline-none">
+                    </div>
+                    <div class="tab-container flex gap-1 p-1.5 rounded-2xl shadow-inner">
+                        <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">体重</button>
+                        <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">饮食</button>
+                        <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">运动</button>
                     </div>
                 </div>
                 <div id="entry-form" class="grid grid-cols-1 md:grid-cols-4 gap-6 text-slate-800 dark:text-white"></div>
@@ -151,11 +162,11 @@
         <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-10 w-full max-w-2xl shadow-2xl border border-white/5">
             <h2 class="text-3xl font-900 mb-8 dark:text-white">Persona Profile</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">姓名</label><input type="text" id="m-name" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white"></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">性别</label><select id="m-gender" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white"><option value="female">女生</option><option value="male">男生</option></select></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">目标体重 kg</label><input type="number" id="m-target" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white"></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">愿望</label><input type="text" id="m-wish" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white"></div>
-                <div class="space-y-1 md:col-span-2"><label class="text-[10px] font-bold text-slate-400 ml-2">今日心情</label><textarea id="m-mood" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white h-24"></textarea></div>
+                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">姓名</label><input type="text" id="m-name" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
+                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">性别</label><select id="m-gender" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"><option value="female">女生</option><option value="male">男生</option></select></div>
+                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">目标体重 kg</label><input type="number" id="m-target" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
+                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">愿望</label><input type="text" id="m-wish" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
+                <div class="space-y-1 md:col-span-2"><label class="text-[10px] font-bold text-slate-400 ml-2">今日心情</label><textarea id="m-mood" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white h-24 outline-none"></textarea></div>
             </div>
             <div class="flex gap-4 mt-10">
                 <button onclick="closeManageModal()" class="flex-1 font-black text-slate-400">取消</button>
@@ -165,8 +176,9 @@
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('sf_v9') || '[]');
-        let curUid = localStorage.getItem('sf_uid_v9') || null;
+        // 数据持久化和状态管理
+        let users = JSON.parse(localStorage.getItem('sf_v10') || '[]');
+        let curUid = localStorage.getItem('sf_uid_v10') || null;
         let themeMode = localStorage.getItem('sf_theme') || 'auto';
         let entryType = 'weight', chart = null;
 
@@ -184,6 +196,7 @@
         function applyThemeMode() {
             const isDark = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', isDark);
+            
             ['light', 'dark', 'auto'].forEach(id => {
                 const btn = document.getElementById('btn-' + id);
                 btn.className = themeMode === id ? "flex-1 py-2 rounded-xl flex justify-center bg-white dark:bg-slate-700 text-accent shadow-sm" : "flex-1 py-2 rounded-xl flex justify-center text-slate-400";
@@ -192,8 +205,8 @@
         }
 
         function sync() {
-            localStorage.setItem('sf_v9', JSON.stringify(users));
-            if(curUid) localStorage.setItem('sf_uid_v9', curUid);
+            localStorage.setItem('sf_v10', JSON.stringify(users));
+            if(curUid) localStorage.setItem('sf_uid_v10', curUid);
             applyThemeMode();
             const u = users.find(x => x.id == curUid);
             document.body.className = `bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex h-screen overflow-hidden ${u?.gender === 'male' ? 'theme-male' : 'theme-female'}`;
@@ -264,13 +277,13 @@
             const btns = { weight: 'tab-weight', food: 'tab-food', sport: 'tab-sport' };
             Object.keys(btns).forEach(k => {
                 const el = document.getElementById(btns[k]);
-                el.className = k === entryType ? "px-6 py-2 rounded-xl font-900 text-sm bg-accent text-white shadow-lg shadow-pink-500/20" : "px-6 py-2 rounded-xl font-900 text-sm text-slate-400";
+                el.className = k === entryType ? "px-6 py-2 rounded-xl font-900 text-sm bg-accent text-white shadow-lg shadow-pink-500/20 scale-105 transform transition-all" : "px-6 py-2 rounded-xl font-900 text-sm text-slate-400 dark:text-slate-500 hover:text-slate-600";
             });
             if(entryType === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重 kg" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold md:col-span-2"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900">记录</button>`;
+                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重 kg" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold md:col-span-2 border border-slate-100 dark:border-slate-700 outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">保存记录</button>`;
             } else {
                 const opts = entryType === 'food' ? ["早餐","午餐","晚餐","点心"] : ["有氧","无氧","拉伸"];
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold">${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select><input type="text" id="e-name" placeholder="内容" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900">添加</button>`;
+                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none">${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select><input type="text" id="e-name" placeholder="内容" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">确认添加</button>`;
             }
         }
 
@@ -287,7 +300,6 @@
             sync();
         }
 
-        // 激励语逻辑
         function updateQuotes(diff) {
             const title = document.getElementById('quote-title');
             const desc = document.getElementById('quote-desc');
@@ -312,16 +324,15 @@
             
             const u = users.find(x => x.id == curUid); if(!u) return;
             document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-wish').innerText = u.wish || '在这里输入你的减重目标';
-            document.getElementById('mood-display').innerText = `今日心情: ${u.mood || '暂无记录'}`;
+            document.getElementById('display-wish').innerText = u.wish || '请输入你的减重愿望';
+            document.getElementById('mood-display').innerText = `今日心情: ${u.mood || '暂未记录'}`;
             document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
             
-            // 兴趣列表
             document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
                 const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
                 const active = i.status === 'active';
                 return `
-                <div class="p-5 rounded-3xl ${active ? 'bg-slate-50 dark:bg-slate-800' : 'bg-slate-100/50 dark:bg-slate-800/30'} group">
+                <div class="p-5 rounded-3xl ${active ? 'bg-slate-50 dark:bg-slate-800' : 'bg-slate-100/50 dark:bg-slate-800/30'} group border border-transparent dark:border-slate-700/50">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <div class="text-sm font-900 ${active ? 'text-slate-800 dark:text-white' : 'text-slate-400'}">【${i.name}】</div>
@@ -329,14 +340,15 @@
                         </div>
                         <div class="flex gap-2">
                             <button onclick="toggleInterest(${i.id})">${active ? '<i data-lucide="pause-circle" class="w-5 h-5 text-slate-300"></i>' : '<i data-lucide="play-circle" class="w-5 h-5 text-accent"></i>'}</button>
-                            <button onclick="deleteInterest(${i.id})" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+                            <button onclick="deleteInterest(${i.id})" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     <div class="flex flex-wrap">${Array.from({length: Math.min(days, 30)}).map(() => `<span class="${active ? 'dot-active' : 'dot-paused'}"></span>`).join('')}</div>
                 </div>`;
             }).join('') || '<p class="text-center py-10 text-[10px] font-bold text-slate-300 italic">No Interests Yet</p>';
 
-            const curW = u.weights.length > 0 ? [...u.weights].sort((a,b)=>a.ts-b.ts)[u.weights.length-1].val : u.target;
+            const sortedWeights = [...u.weights].sort((a,b)=>a.ts-b.ts);
+            const curW = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length-1].val : u.target;
             const diff = (curW - u.target).toFixed(1);
             const statusEl = document.getElementById('status-tag');
             statusEl.innerText = (diff > 0 ? "+" : "") + diff;
@@ -361,7 +373,7 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="font-900 text-sm dark:text-slate-200">${l.cal} kcal</span>
-                        <button onclick="deleteLog(${l.id}, 'log')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteLog(${l.id}, 'log')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
                     </div>
                 </div>`;
             
