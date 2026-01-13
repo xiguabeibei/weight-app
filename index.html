@@ -1,123 +1,39 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<title>家庭健康记录</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>健康记录（保存验证版）</title>
 <style>
-:root{
- --bg:#f6f7fb;
- --card:#ffffff;
- --text:#222;
- --primary:#ff8fb1;
-}
-body.dark{
- --bg:#1e1e2f;
- --card:#2b2b3c;
- --text:#f4f4f5;
-}
 body{
- margin:0;
- display:flex;
- height:100vh;
- background:var(--bg);
- color:var(--text);
  font-family:-apple-system,"PingFang SC";
+ margin:0;display:flex;height:100vh;
+ background:#f6f7fb;
 }
-
-/* ===== 左侧栏 ===== */
 aside{
- width:240px;
- padding:16px;
- background:var(--card);
+ width:220px;padding:16px;background:#fff;
  box-shadow:4px 0 20px rgba(0,0,0,.08);
 }
-.section-title{
- font-size:14px;
- opacity:.6;
- margin:12px 0 6px;
-}
-.btn{
- width:100%;
- padding:10px;
- border:none;
- border-radius:12px;
- background:#eee;
- font-size:15px;
-}
-.btn.primary{
- background:var(--primary);
- color:#fff;
-}
-.toggle{
- display:flex;
- gap:6px;
-}
-.toggle button{
- flex:1;
- padding:6px 0;
- border-radius:999px;
- border:none;
- font-size:13px;
-}
-
-/* ===== 成员列表 ===== */
-.member-name{
- font-size:17px;
- font-weight:600;
- margin-top:10px;
-}
-.member-item{
- padding:6px 10px;
- border-radius:10px;
- margin-top:4px;
- cursor:pointer;
- font-size:15px;
-}
-.member-item:hover{
- background:#eee;
-}
-
-/* ===== 主体 ===== */
-main{
- flex:1;
- padding:20px;
- overflow:auto;
+main{flex:1;padding:20px}
+button{
+ width:100%;padding:10px;margin-top:8px;
+ border:none;border-radius:10px;
+ background:#ff8fb1;color:#fff;font-size:16px;
 }
 .card{
- background:var(--card);
- border-radius:20px;
- padding:16px;
- margin-bottom:16px;
- box-shadow:0 10px 30px rgba(0,0,0,.08);
+ background:#fff;border-radius:16px;
+ padding:16px;margin-bottom:16px;
 }
-input,textarea{
- width:100%;
- padding:12px;
- border-radius:12px;
- border:1px solid #ccc;
- margin-bottom:10px;
- font-size:16px;
-}
+input{width:100%;padding:10px;margin-top:8px}
+.member{margin-top:8px;cursor:pointer}
 </style>
 </head>
 
 <body>
 
 <aside>
-<div class="section-title">设置</div>
-<button class="btn primary" onclick="openSettings()">添加成员</button>
-
-<div class="toggle" style="margin-top:8px">
-<button onclick="setTheme('light')">☀️</button>
-<button onclick="setTheme('dark')">🌙</button>
-<button onclick="setTheme('system')">🌓</button>
-</div>
-
-<div class="section-title">成员</div>
-<div id="memberList"></div>
+<button onclick="showAdd()">添加成员</button>
+<div id="members"></div>
 </aside>
 
 <main>
@@ -126,149 +42,77 @@ input,textarea{
 
 <script>
 /* ===== 数据 ===== */
-let store = JSON.parse(localStorage.getItem("health_ok")||"{}");
+let store = JSON.parse(localStorage.getItem("health_save_test")||"{}");
 let currentUser = null;
-let page = "weight";
 
 function save(){
- localStorage.setItem("health_ok",JSON.stringify(store));
+ localStorage.setItem("health_save_test",JSON.stringify(store));
 }
 
-/* ===== 主题 ===== */
-function setTheme(t){
- localStorage.setItem("theme",t);
- applyTheme();
+/* ===== 工具：安全日期 ===== */
+function getDate(){
+ return document.getElementById("date")?.value
+   || new Date().toISOString().slice(0,10);
 }
-function applyTheme(){
- const t=localStorage.getItem("theme")||"system";
- document.body.classList.toggle("dark",
-  t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches)
- );
-}
-applyTheme();
 
 /* ===== 成员 ===== */
 function renderMembers(){
- memberList.innerHTML="";
- Object.keys(store).forEach(name=>{
-  const box=document.createElement("div");
-  box.innerHTML=`
-   <div class="member-name">${name}</div>
-   <div class="member-item" onclick="open('${name}','weight')">体重记录</div>
-   <div class="member-item" onclick="open('${name}','food')">饮食摄入</div>
-   <div class="member-item" onclick="open('${name}','sport')">运动减脂</div>
-  `;
-  memberList.appendChild(box);
+ members.innerHTML="";
+ Object.keys(store).forEach(n=>{
+  const d=document.createElement("div");
+  d.className="member";
+  d.innerText=n;
+  d.onclick=()=>open(n);
+  members.appendChild(d);
  });
 }
 renderMembers();
 
-function open(name,p){
- currentUser=name;
- page=p;
- render();
+function showAdd(){
+ content.innerHTML=`
+ <div class="card">
+  <h2>添加成员</h2>
+  <input id="name" placeholder="成员名">
+  <button onclick="addMember()">保存</button>
+ </div>`;
 }
 
-function openSettings(){
- page="settings";
- render();
-}
-
-/* ===== 页面渲染 ===== */
-function render(){
- if(page==="settings"){
-  content.innerHTML=`
-   <div class="card">
-    <h2>添加成员</h2>
-    <input id="name" placeholder="成员名">
-    <input id="start" placeholder="初始体重">
-    <input id="target" placeholder="目标体重">
-    <button class="btn primary" onclick="addMember()">保存</button>
-   </div>`;
-  return;
- }
-
- if(!currentUser){
-  content.innerHTML="<div class='card'>请先添加成员</div>";
-  return;
- }
-
- if(page==="weight")renderWeight();
- if(page==="food")renderFood();
- if(page==="sport")renderSport();
-}
-
-/* ===== 成员数据 ===== */
-function ensure(date){
- store[currentUser].records = store[currentUser].records || {};
- store[currentUser].records[date] =
-  store[currentUser].records[date] || {weight:{},foods:[],sports:[]};
-}
-
-/* ===== 添加成员 ===== */
 function addMember(){
  const n=name.value;
  if(!n)return;
- store[n]={profile:{start:+start.value,target:+target.value},records:{}};
+ store[n]={records:{}};
  save();
  renderMembers();
- open(n,"weight");
+ open(n);
+}
+
+/* ===== 打开成员 ===== */
+function open(name){
+ currentUser=name;
+ renderWeight();
 }
 
 /* ===== 体重 ===== */
 function renderWeight(){
  content.innerHTML=`
  <div class="card">
-  <h2>体重记录</h2>
+  <h2>${currentUser} · 体重记录</h2>
   <input type="date" id="date">
   <input id="w" placeholder="体重 kg">
-  <button class="btn primary" onclick="saveWeight()">保存</button>
+  <button onclick="saveWeight()">保存体重</button>
  </div>`;
 }
 
 function saveWeight(){
- const d=date.value;
- ensure(d);
- store[currentUser].records[d].weight.value = +w.value;
+ const d=getDate();
+ store[currentUser].records[d]={weight:+w.value};
  save();
- alert("已保存");
-}
 
-/* ===== 饮食 ===== */
-function renderFood(){
- content.innerHTML=`
- <div class="card">
-  <h2>饮食摄入</h2>
-  <textarea id="food" placeholder="食物 + 卡路里"></textarea>
-  <button class="btn primary" onclick="saveFood()">保存</button>
- </div>`;
+ alert(
+  "已保存 ✅\n\n当前数据：\n"+
+  JSON.stringify(store,null,2)
+ );
 }
-function saveFood(){
- const d=new Date().toISOString().slice(0,10);
- ensure(d);
- store[currentUser].records[d].foods.push(food.value);
- save();
- alert("已保存");
-}
-
-/* ===== 运动 ===== */
-function renderSport(){
- content.innerHTML=`
- <div class="card">
-  <h2>运动减脂</h2>
-  <input id="sport" placeholder="运动 + 卡路里">
-  <button class="btn primary" onclick="saveSport()">保存</button>
- </div>`;
-}
-function saveSport(){
- const d=new Date().toISOString().slice(0,10);
- ensure(d);
- store[currentUser].records[d].sports.push(sport.value);
- save();
- alert("已保存");
-}
-
-render();
 </script>
 
 </body>
