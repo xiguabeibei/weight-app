@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="体重本">
-<title>体重本</title>
+<meta name="apple-mobile-web-app-title" content="健康记录">
+<title>健康记录</title>
 
 <style>
 :root{
-  --pink:#ff8fb1;
-  --purple:#b69cff;
-  --bg:#f6f7fb;
-  --card:#fff;
+  --pink:#ff9ab5;
+  --purple:#b8a6ff;
+  --blue:#a6d8ff;
+  --bg:linear-gradient(180deg,#fff0f5,#f6f7ff);
+  --card:#ffffffcc;
   --text:#222;
-  --sub:#777;
+  --sub:#666;
 }
 
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#0f1115;
-    --card:#1c1f26;
+    --bg:linear-gradient(180deg,#0f1115,#1a1d26);
+    --card:#1f2430cc;
     --text:#f2f2f2;
     --sub:#aaa;
   }
@@ -33,57 +34,54 @@ body{
   color:var(--text);
 }
 
-.app{padding:20px;padding-bottom:140px;}
-
-h1{font-size:26px;margin:4px 0 14px;}
-h2{font-size:18px;color:var(--sub);margin-bottom:8px;}
-
-.card{
-  background:var(--card);
-  border-radius:26px;
-  padding:20px;
-  margin-bottom:18px;
-  box-shadow:0 14px 40px rgba(0,0,0,.12);
-  animation:up .45s cubic-bezier(.2,.8,.2,1);
+.app{
+  padding:22px;
+  padding-bottom:140px;
 }
 
-@keyframes up{
-  from{opacity:0;transform:translateY(24px) scale(.96)}
+h1{font-size:28px;margin-bottom:10px;}
+h2{font-size:18px;color:var(--sub);margin-bottom:10px;}
+
+.card{
+  backdrop-filter:blur(20px);
+  background:var(--card);
+  border-radius:28px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.12);
+  animation:rise .5s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes rise{
+  from{opacity:0;transform:translateY(30px)}
   to{opacity:1;transform:none}
 }
 
-input{
+input,select{
   width:100%;
-  padding:18px;
-  border-radius:20px;
+  padding:16px;
+  border-radius:18px;
   border:1px solid #eee;
-  font-size:18px;
+  font-size:16px;
   margin-bottom:12px;
 }
 
 button{
   width:100%;
-  padding:18px;
+  padding:16px;
   border-radius:999px;
   background:linear-gradient(135deg,var(--pink),var(--purple));
-  color:#fff;
   border:none;
-  font-size:18px;
+  color:#fff;
+  font-size:17px;
 }
-
-.big{
-  font-size:52px;
-  font-weight:800;
-  color:var(--pink);
-}
-
-.big.pop{animation:pop .4s cubic-bezier(.3,1.4,.4,1)}
-@keyframes pop{from{transform:scale(.8)}to{transform:scale(1)}}
 
 .tabs{
-  position:fixed;bottom:0;left:0;right:0;
+  position:fixed;
+  bottom:0;left:0;right:0;
   display:flex;
-  background:var(--card);
+  background:#ffffffee;
+  backdrop-filter:blur(20px);
   border-top:1px solid #ddd;
 }
 
@@ -91,8 +89,8 @@ button{
   flex:1;
   background:none;
   border:none;
-  padding:16px 0 12px;
-  font-size:15px;
+  padding:14px 0 10px;
+  font-size:14px;
 }
 
 .page{display:none;animation:slide .35s ease}
@@ -103,48 +101,19 @@ button{
   to{opacity:1;transform:none}
 }
 
-.streak{
-  font-size:20px;
+.illustration{
+  position:absolute;
+  top:-60px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,var(--blue),transparent 70%);
+  border-radius:50%;
+  z-index:-1;
+}
+
+.encourage{
+  font-size:18px;
   color:var(--pink);
-  margin-top:6px;
-}
-
-.chart{
-  height:140px;
-  display:flex;
-  align-items:flex-end;
-  gap:6px;
-}
-
-.bar{
-  flex:1;
-  background:var(--purple);
-  border-radius:8px 8px 0 0;
-  animation:grow .6s ease forwards;
-}
-
-@keyframes grow{
-  from{height:0}
-  to{height:var(--h)}
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:#0008;
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal.show{display:flex}
-
-.modal .card{text-align:center}
-
-.mood span{
-  font-size:30px;
-  margin-right:10px;
-  cursor:pointer;
+  margin-top:8px;
 }
 </style>
 </head>
@@ -152,126 +121,120 @@ button{
 <body>
 <div class="app">
 
-<div class="page active" id="home">
-<h1 id="quote">今天也要温柔 🌷</h1>
-
+<div class="page active" id="weightPage">
+<h1>体重记录</h1>
 <div class="card">
-<input id="weight" type="number" step="0.1" placeholder="今天的体重 kg">
-<div class="mood">
-<span onclick="setMood('🙂')">🙂</span>
-<span onclick="setMood('😐')">😐</span>
-<span onclick="setMood('😣')">😣</span>
+<div class="illustration"></div>
+<input id="name" placeholder="姓名">
+<input id="weight" type="number" step="0.1" placeholder="体重 kg">
+<button onclick="saveWeight()">保存体重</button>
+<div id="encourage" class="encourage"></div>
 </div>
-<button onclick="save()">保存</button>
-<div class="big" id="today">-- kg</div>
-<div class="streak" id="streak"></div>
 </div>
 
+<div class="page" id="foodPage">
+<h1>饮食记录</h1>
 <div class="card">
-<h2>7 日趋势</h2>
-<div class="chart" id="chart"></div>
+<input id="foodName" placeholder="食材">
+<input id="foodCal" type="number" placeholder="卡路里 kcal">
+<button onclick="saveFood()">保存饮食</button>
+<div id="foodList"></div>
 </div>
 </div>
 
-<div class="page" id="list">
-<h1>记录 📖</h1>
-<div class="card" id="records"></div>
+<div class="page" id="sportPage">
+<h1>运动记录</h1>
+<div class="card">
+<select id="sportType">
+<option>走路</option>
+<option>跑步</option>
+<option>力量</option>
+<option>其他</option>
+</select>
+<input id="sportCal" type="number" placeholder="消耗 kcal">
+<button onclick="saveSport()">保存运动</button>
+<div id="sportList"></div>
+</div>
 </div>
 
 </div>
 
 <div class="tabs">
-<button onclick="show('home')">🏠<br>今天</button>
-<button onclick="show('list')">📖<br>记录</button>
-</div>
-
-<div class="modal" id="celebrate">
-<div class="card">
-<h1>🎉 太棒了！</h1>
-<p id="celebrateText"></p>
-<button onclick="closeCelebrate()">继续记录</button>
-</div>
+<button onclick="show('weightPage')">⚖️<br>体重</button>
+<button onclick="show('foodPage')">🍽<br>饮食</button>
+<button onclick="show('sportPage')">🏃<br>运动</button>
 </div>
 
 <script>
-const quotes=[
-"慢慢来，你已经很棒了 💗",
-"每一天都算数 🌱",
-"身体在悄悄变好 ✨",
-"记录就是爱自己 🧸"
-];
-
-let mood="";
-const data=JSON.parse(localStorage.getItem("data")||"{}");
-const todayKey=new Date().toISOString().slice(0,10);
+const store=JSON.parse(localStorage.getItem("health")||"{}");
+const today=new Date().toISOString().slice(0,10);
 
 function save(){
- const w=weight.value;
- if(!w)return;
- data[todayKey]={w,mood};
- localStorage.setItem("data",JSON.stringify(data));
- today.classList.remove("pop");
- void today.offsetWidth;
- today.classList.add("pop");
- render();
+ localStorage.setItem("health",JSON.stringify(store));
 }
 
-function render(){
- quote.innerText=quotes[new Date().getDate()%quotes.length];
- today.innerText=data[todayKey]?data[todayKey].w+" kg":"-- kg";
+function saveWeight(){
+ const n=name.value.trim(), w=weight.value;
+ if(!n||!w)return;
+ store[n]=store[n]||{weights:{},foods:{},sports:{}};
+ const last=Object.values(store[n].weights).slice(-1)[0];
+ store[n].weights[today]=Number(w);
+ save();
 
- let s=0,d=new Date();
- while(true){
-  const k=d.toISOString().slice(0,10);
-  if(data[k]){s++;d.setDate(d.getDate()-1);}else break;
+ if(last){
+  encourage.innerText=
+   w<last?"你在变轻，真好 🌱":
+   w>last?"一次波动没关系 🍃":
+   "保持也是进步 🤍";
+ }else{
+  encourage.innerText="开始记录，就是改变 ✨";
  }
- streak.innerText=s>1?`🔥 连续 ${s} 天`:"";
-
- if([7,14,30].includes(s)){
-  celebrate.classList.add("show");
-  celebrateText.innerText=`你已经连续记录 ${s} 天啦 💖`;
- }
-
- renderChart();
- renderList();
 }
 
-function renderChart(){
- chart.innerHTML="";
- const days=Object.keys(data).sort().slice(-7);
- const max=Math.max(...days.map(d=>data[d].w));
- days.forEach(d=>{
-  const bar=document.createElement("div");
-  bar.className="bar";
-  bar.style.setProperty("--h",(data[d].w/max*100)+"%");
-  chart.appendChild(bar);
+function saveFood(){
+ const n=name.value.trim();
+ if(!n)return;
+ store[n]=store[n]||{weights:{},foods:{},sports:{}};
+ store[n].foods[today]=store[n].foods[today]||[];
+ store[n].foods[today].push({
+  food:foodName.value,
+  cal:foodCal.value
+ });
+ save();
+ renderFood(n);
+}
+
+function saveSport(){
+ const n=name.value.trim();
+ if(!n)return;
+ store[n]=store[n]||{weights:{},foods:{},sports:{}};
+ store[n].sports[today]=store[n].sports[today]||[];
+ store[n].sports[today].push({
+  type:sportType.value,
+  cal:sportCal.value
+ });
+ save();
+ renderSport(n);
+}
+
+function renderFood(n){
+ foodList.innerHTML="";
+ (store[n].foods[today]||[]).forEach(i=>{
+  foodList.innerHTML+=`<div>${i.food} · ${i.cal} kcal</div>`;
  });
 }
 
-function renderList(){
- records.innerHTML="";
- Object.keys(data).sort().reverse().forEach(d=>{
-  records.innerHTML+=`<div>${d} · ${data[d].w}kg ${data[d].mood||""}</div>`;
+function renderSport(n){
+ sportList.innerHTML="";
+ (store[n].sports[today]||[]).forEach(i=>{
+  sportList.innerHTML+=`<div>${i.type} · ${i.cal} kcal</div>`;
  });
 }
 
-function setMood(m){mood=m}
 function show(id){
  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 }
-function closeCelebrate(){celebrate.classList.remove("show")}
-
-const weight=document.getElementById("weight");
-const today=document.getElementById("today");
-const streak=document.getElementById("streak");
-const chart=document.getElementById("chart");
-const records=document.getElementById("records");
-const quote=document.getElementById("quote");
-const celebrate=document.getElementById("celebrate");
-const celebrateText=document.getElementById("celebrateText");
-
-render();
 </script>
 </body>
 </html>
