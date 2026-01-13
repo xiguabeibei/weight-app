@@ -52,10 +52,7 @@
                 <section class="card p-10 shadow-xl">
                     <div class="flex justify-between items-center mb-8">
                         <div>
-                            <div class="flex items-center gap-5 mb-4">
-                                <h1 id="display-name" class="text-7xl font-black tracking-tighter">--</h1>
-                                <div id="display-gender"></div>
-                            </div>
+                            <div class="flex items-center gap-5 mb-4"><h1 id="display-name" class="text-7xl font-black tracking-tighter">--</h1><div id="display-gender"></div></div>
                             <div id="display-wish-tag" class="text-blue-600 font-bold text-lg mb-2">愿望: --</div>
                         </div>
                         <div class="text-right">
@@ -64,7 +61,7 @@
                         </div>
                     </div>
                     <div class="space-y-3">
-                        <div class="flex justify-between text-sm font-black text-gray-400"><span>起始</span><span id="progress-text" class="text-green-500">进度 0%</span><span>目标</span></div>
+                        <div class="flex justify-between text-sm font-black text-gray-400"><span>起始</span><span id="progress-text" class="text-green-500 font-bold">进度 0%</span><span>目标</span></div>
                         <div class="progress-bg"><div id="progress-bar" class="progress-fill" style="width: 0%"></div></div>
                     </div>
                 </section>
@@ -111,7 +108,7 @@
                         <button onclick="setLogType('sport')" id="tab-sport" class="pb-5 text-2xl font-bold">去消耗</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-end">
-                        <div class="md:col-span-1"><label class="text-sm font-bold text-gray-400 mb-2 block">日期</label><input type="date" id="log-date"></div>
+                        <div class="md:col-span-1"><label class="text-sm font-bold text-gray-400 mb-2 block">记录日期</label><input type="date" id="log-date"></div>
                         <div id="entry-form-fields" class="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6"></div>
                         <button onclick="submitEntry()" class="md:col-span-1 h-[60px] bg-[#34c759] text-white rounded-2xl font-black text-xl active:scale-95 transition-all">确认记录</button>
                     </div>
@@ -134,41 +131,36 @@
             </div>
             <div class="flex gap-4 mt-10"><button onclick="closeModal()" class="flex-1 py-5 font-bold text-gray-400">取消</button><button onclick="confirmAddUser()" class="flex-1 py-5 bg-black text-white rounded-2xl font-bold">创建</button></div>
         </div>
-
         <div id="interest-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl">
             <h2 class="text-3xl font-black mb-8">新增兴趣项目</h2>
             <div class="space-y-5">
-                <input type="text" id="int-name" placeholder="项目名称（如：每日书法）">
-                <div class="flex flex-col gap-2"><label class="text-sm font-bold text-gray-400">计划开始日期</label><input type="date" id="int-start"></div>
-                <div class="flex flex-col gap-2"><label class="text-sm font-bold text-gray-400">计划结束日期（可选）</label><input type="date" id="int-end"></div>
+                <input type="text" id="int-name" placeholder="项目名称">
+                <div class="flex flex-col gap-2"><label class="text-sm font-bold text-gray-400">开始日期</label><input type="date" id="int-start"></div>
+                <div class="flex flex-col gap-2"><label class="text-sm font-bold text-gray-400">结束日期（可选）</label><input type="date" id="int-end"></div>
             </div>
             <button onclick="confirmAddInt()" class="mt-8 w-full py-5 bg-orange-500 text-white rounded-2xl font-bold text-xl">确认加入清单</button>
         </div>
-
-        <div id="wish-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl"><h2 class="text-3xl font-black mb-8">愿望清单</h2><input type="text" id="wish-input" placeholder="写下你的目标..."><button onclick="saveWish()" class="mt-8 w-full py-5 bg-blue-500 text-white rounded-2xl font-bold">保存</button></div>
-        <div id="mood-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl"><h2 class="text-3xl font-black mb-8">今日感悟</h2><textarea id="mood-input" rows="5" placeholder="记录此刻的心情..."></textarea><button onclick="saveMood()" class="mt-8 w-full py-5 bg-green-500 text-white rounded-2xl font-bold">保存感悟</button></div>
+        <div id="wish-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl"><h2 class="text-3xl font-black mb-8">愿望清单</h2><input type="text" id="wish-input" placeholder="设定目标..."><button onclick="saveWish()" class="mt-8 w-full py-5 bg-blue-500 text-white rounded-2xl font-bold">保存</button></div>
+        <div id="mood-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl"><h2 class="text-3xl font-black mb-8">今日感悟</h2><textarea id="mood-input" rows="5" placeholder="记录此刻心情..."></textarea><button onclick="saveMood()" class="mt-8 w-full py-5 bg-green-500 text-white rounded-2xl font-bold">保存</button></div>
         <div id="manage-modal" class="modal-content hidden bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl">
             <h2 class="text-3xl font-black mb-8">资料设置</h2>
-            <div class="space-y-6">
-                <div><label class="text-sm font-bold text-gray-400 mb-2 block">起始体重 (KG)</label><input type="number" id="m-start"></div>
-                <div><label class="text-sm font-bold text-gray-400 mb-2 block">目标体重 (KG)</label><input type="number" id="m-target"></div>
-            </div>
+            <div class="space-y-6"><div><label class="text-sm font-bold text-gray-400 mb-2 block">起始体重 (KG)</label><input type="number" id="m-start"></div><div><label class="text-sm font-bold text-gray-400 mb-2 block">目标体重 (KG)</label><input type="number" id="m-target"></div></div>
             <button onclick="saveUserManage()" class="mt-10 w-full py-5 bg-black text-white rounded-2xl font-bold">保存修改</button>
         </div>
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('health_max_v5') || '[]');
-        let curUid = localStorage.getItem('health_uid_max') || (users[0]?.id || null);
+        let users = JSON.parse(localStorage.getItem('health_pro_final_v6') || '[]');
+        let curUid = localStorage.getItem('health_uid_final_v6') || (users[0]?.id || null);
         let entryType = 'weight', charts = {}, ranges = { weight: 7, bp: 7 };
 
         function sync() {
-            localStorage.setItem('health_max_v5', JSON.stringify(users));
-            if(curUid) localStorage.setItem('health_uid_max', curUid);
+            localStorage.setItem('health_pro_final_v6', JSON.stringify(users));
+            if(curUid) localStorage.setItem('health_uid_final_v6', curUid);
             render();
         }
 
-        // 基础交互
+        // 基础功能
         function openModal(id) {
             document.getElementById('modal-overlay').classList.remove('hidden');
             document.querySelectorAll('.modal-content').forEach(el => el.classList.add('hidden'));
@@ -182,6 +174,7 @@
         }
         function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-hidden'); document.getElementById('sidebar-open').classList.toggle('hidden'); }
+        
         function setRange(type, day) { 
             ranges[type] = day; 
             document.querySelectorAll(`#${type==='weight'?'w':'bp'}-ranges .range-btn`).forEach(b => b.classList.remove('active'));
@@ -189,12 +182,12 @@
             render(); 
         }
 
-        // 核心数据处理
+        // 数据写入
         function confirmAddUser() {
             const name = document.getElementById('new-name').value;
             const target = parseFloat(document.getElementById('new-target').value || 60);
             const startW = parseFloat(document.getElementById('new-start').value || target);
-            if(!name) return alert("请输入姓名");
+            if(!name) return;
             const newUser = { id: Date.now(), name, gender: document.getElementById('new-gender').value, startW, target, weights: [], bps: [], logs: [], interests: [], wish: '', mood: '' };
             users.push(newUser); curUid = newUser.id; closeModal(); sync();
         }
@@ -205,7 +198,7 @@
             const start = document.getElementById('int-start').value || new Date().toISOString().split('T')[0];
             const end = document.getElementById('int-end').value;
             if(!name) return;
-            if(u.interests.some(i => i.name === name)) { if(!confirm("该兴趣已存在，是否覆盖？")) return; u.interests = u.interests.filter(i => i.name !== name); }
+            if(u.interests.some(i => i.name === name)) { if(!confirm("项目名重复，是否覆盖？")) return; u.interests = u.interests.filter(i => i.name !== name); }
             u.interests.push({ id: Date.now(), name, start, end, paused: false });
             closeModal(); sync();
         }
@@ -220,25 +213,26 @@
             if(entryType === 'weight') {
                 const val = parseFloat(document.getElementById('e-val').value);
                 if(!val) return;
-                if(u.weights.some(w => w.date === date && w.slot === slot)) if(!confirm("该时段已有记录，是否覆盖？")) return;
+                if(u.weights.some(w => w.date === date && w.slot === slot)) if(!confirm("覆盖记录？")) return;
                 u.weights = u.weights.filter(w => !(w.date === date && w.slot === slot));
                 u.weights.push({ id: Date.now(), val, date, ts, slot });
             } else if(entryType === 'bp') {
                 const high = parseInt(document.getElementById('e-h').value), low = parseInt(document.getElementById('e-l').value), hr = parseInt(document.getElementById('e-hr').value);
                 if(!high || !low) return;
-                if(u.bps.some(b => b.date === date && b.slot === slot)) if(!confirm("该时段已有记录，是否覆盖？")) return;
+                if(u.bps.some(b => b.date === date && b.slot === slot)) if(!confirm("覆盖记录？")) return;
                 u.bps = u.bps.filter(b => !(b.date === date && b.slot === slot));
                 u.bps.push({ id: Date.now(), high, low, hr, date, ts, slot });
             } else {
                 const name = document.getElementById('e-name').value, cal = parseInt(document.getElementById('e-cal').value || 0);
                 if(!name) return;
-                if(u.logs.some(l => l.date === date && l.slot === slot && l.name === name)) if(!confirm("该项已记录，是否覆盖？")) return;
+                if(u.logs.some(l => l.date === date && l.slot === slot && l.name === name)) if(!confirm("覆盖记录？")) return;
                 u.logs = u.logs.filter(l => !(l.date === date && l.slot === slot && l.name === name));
                 u.logs.push({ id: Date.now(), type: entryType, name, cal, date, slot });
             }
             sync();
         }
 
+        // 渲染联动
         function render() {
             const uNav = document.getElementById('user-nav');
             uNav.innerHTML = users.map(u => `<div class="swipe-container shadow-md"><div class="delete-btn" onclick="deleteUser(${u.id})">注销</div><div onclick="curUid=${u.id};sync()" class="swipe-content p-6 font-black text-xl ${curUid == u.id ? 'text-[#34c759] bg-white' : 'text-gray-300'}">${u.name}</div></div>`).join('');
@@ -247,75 +241,74 @@
             if(!u) { document.getElementById('content-area').classList.add('hidden'); return; }
             document.getElementById('content-area').classList.remove('hidden');
 
-            // 头部数据
             document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-wish-tag').innerText = "愿望: " + (u.wish || "尚未设定");
+            document.getElementById('display-wish-tag').innerText = "愿望: " + (u.wish || "设定中");
             document.getElementById('display-mood').innerText = u.mood ? `“ ${u.mood} ”` : "“ 记录此刻感悟... ”";
             document.getElementById('display-gender').innerHTML = u.gender === 'male' ? '<i data-lucide="mars" class="w-10 h-10 text-blue-500"></i>' : '<i data-lucide="venus" class="w-10 h-10 text-pink-500"></i>';
 
-            // 进度条
+            // 联动明细核心逻辑：根据 view-date 过滤
+            const vDate = document.getElementById('view-date').value;
+
+            // 1. 体重差值进度
             const sortedW = [...u.weights].sort((a,b)=>a.ts-b.ts);
             const curW = sortedW.length ? sortedW[sortedW.length-1].val : u.startW;
-            const diff = (curW - u.target).toFixed(1);
-            document.getElementById('weight-diff').innerText = diff;
+            document.getElementById('weight-diff').innerText = (curW - u.target).toFixed(1);
             const totalGap = Math.abs(u.startW - u.target);
             const doneGap = Math.abs(u.startW - curW);
             const prog = totalGap === 0 ? 100 : Math.min(100, Math.round((doneGap / totalGap) * 100));
             document.getElementById('progress-bar').style.width = prog + '%';
             document.getElementById('progress-text').innerText = `已完成进度 ${prog}%`;
 
-            // 兴趣列表（带时长计算）
+            // 2. 兴趣清单（不受日期影响，全局展示）
             document.getElementById('interest-list').innerHTML = u.interests.map(i => {
                 const dayDiff = Math.floor((new Date() - new Date(i.start)) / 86400000) + 1;
-                const endInfo = i.end ? `<span class="text-orange-400">至 ${i.end}</span>` : `<span class="text-green-400">持续中</span>`;
-                return `<div class="swipe-container shadow-md"><div class="delete-btn" onclick="deleteInt(${i.id})">删除项目</div>
+                return `<div class="swipe-container shadow-md"><div class="delete-btn" onclick="deleteInt(${i.id})">删除</div>
                 <div class="swipe-content p-6 flex justify-between items-center">
-                    <div>
-                        <div class="font-black text-xl ${i.paused?'text-gray-300 line-through':''}">${i.name}</div>
-                        <div class="text-sm font-bold text-gray-400 mt-1 uppercase tracking-tighter">已坚持 ${dayDiff} 天 | ${endInfo}</div>
-                    </div>
+                    <div><div class="font-black text-xl ${i.paused?'text-gray-300 line-through':''}">${i.name}</div><div class="text-sm font-bold text-gray-400 mt-1 uppercase tracking-tighter">坚持 ${dayDiff} 天 ${i.end?' | 目标至'+i.end:''}</div></div>
                     <button onclick="toggleInt(${i.id})" class="${i.paused?'text-gray-300':'text-[#34c759]'}"><i data-lucide="${i.paused?'play-circle':'pause-circle'}" class="w-8 h-8"></i></button>
                 </div></div>`;
             }).join('');
 
-            // 明细列表
-            const vDate = document.getElementById('view-date').value;
+            // 3. 每日明细（严格受 vDate 联动）
             const dayLogs = u.logs.filter(l => l.date === vDate);
             const logTpl = (l, c) => `<div class="swipe-container"><div class="delete-btn" onclick="deleteLog(${l.id})">删除</div><div class="swipe-content p-5 flex justify-between items-center"><div><div class="font-bold text-lg">${l.name}</div><div class="text-xs text-gray-400 font-black">${l.slot}</div></div><div class="text-2xl font-black text-${c}-500">${l.cal}<small class="text-xs">kcal</small></div></div></div>`;
-            document.getElementById('list-food').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">饮食补给</p>` + dayLogs.filter(l=>l.type==='food').map(l=>logTpl(l, 'orange')).join('');
-            document.getElementById('list-sport').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">运动消耗</p>` + dayLogs.filter(l=>l.type==='sport').map(l=>logTpl(l, 'blue')).join('');
-            document.getElementById('list-bp').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">生命体征</p>` + u.bps.filter(b=>b.date===vDate).map(b=>`<div class="swipe-container"><div class="delete-btn" onclick="deleteBp(${b.id})">删除</div><div class="swipe-content p-5 flex justify-between items-center"><div><div class="font-bold text-2xl">${b.high}/${b.low}</div><div class="text-xs text-gray-400 font-black">${b.slot} | HR:${b.hr}</div></div><i data-lucide="activity" class="text-red-500 w-6 h-6"></i></div></div>`).join('');
+            
+            document.getElementById('list-food').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">饮食补给 (${vDate})</p>` + 
+                (dayLogs.filter(l=>l.type==='food').map(l=>logTpl(l, 'orange')).join('') || '<div class="text-gray-300 italic text-sm p-4">当日无补给记录</div>');
+            
+            document.getElementById('list-sport').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">运动消耗 (${vDate})</p>` + 
+                (dayLogs.filter(l=>l.type==='sport').map(l=>logTpl(l, 'blue')).join('') || '<div class="text-gray-300 italic text-sm p-4">当日无运动记录</div>');
+            
+            document.getElementById('list-bp').innerHTML = `<p class="text-sm font-black text-gray-400 mb-4 uppercase">生命体征 (${vDate})</p>` + 
+                (u.bps.filter(b=>b.date===vDate).map(b=>`<div class="swipe-container"><div class="delete-btn" onclick="deleteBp(${b.id})">删除</div><div class="swipe-content p-5 flex justify-between items-center"><div><div class="font-bold text-2xl">${b.high}/${b.low}</div><div class="text-xs text-gray-400 font-black">${b.slot} | HR:${b.hr}</div></div><i data-lucide="activity" class="text-red-500 w-6 h-6"></i></div></div>`).join('') || '<div class="text-gray-300 italic text-sm p-4">当日未测血压</div>');
 
             renderEntryFields(); updateCharts(u); lucide.createIcons();
         }
 
+        // 其余辅助函数保持不变
         function renderEntryFields() {
             const container = document.getElementById('entry-form-fields');
             ['weight','bp','food','sport'].forEach(t => document.getElementById('tab-'+t).className = `pb-5 text-2xl font-bold transition-all ${entryType === t ? 'tab-active' : 'text-gray-200'}`);
-            if(entryType === 'weight') container.innerHTML = `<select id="e-slot"><option>早起</option><option>睡前</option></select><div class="md:col-span-2"><input type="number" id="e-val" placeholder="当前体重(KG)"></div>`;
+            if(entryType === 'weight') container.innerHTML = `<select id="e-slot"><option>早起</option><option>睡前</option></select><div class="md:col-span-2"><input type="number" id="e-val" placeholder="体重(KG)"></div>`;
             else if(entryType === 'bp') container.innerHTML = `<select id="e-slot"><option>早起</option><option>睡前</option></select><div class="flex gap-2"><input type="number" id="e-h" placeholder="高压"><input type="number" id="e-l" placeholder="低压"></div><input type="number" id="e-hr" placeholder="心率">`;
-            else if(entryType === 'food') container.innerHTML = `<select id="e-slot"><option>早餐</option><option>午餐</option><option>晚餐</option><option>加餐</option></select><input type="text" id="e-name" placeholder="食物名称"><input type="number" id="e-cal" placeholder="千卡">`;
+            else if(entryType === 'food') container.innerHTML = `<select id="e-slot"><option>早餐</option><option>午餐</option><option>晚餐</option><option>加餐</option></select><input type="text" id="e-name" placeholder="食物"><input type="number" id="e-cal" placeholder="千卡">`;
             else container.innerHTML = `<select id="e-slot"><option>单人运动</option><option>双人运动</option></select><input type="text" id="e-name" placeholder="运动项目"><input type="number" id="e-cal" placeholder="消耗千卡">`;
         }
 
         function updateCharts(u) {
-            const filterData = (arr, days) => arr.filter(i => i.ts >= Date.now() - days * 86400000).sort((a,b)=>a.ts-b.ts);
-            
-            // 体重图
-            const wd = filterData(u.weights, ranges.weight);
+            const f = (arr, d) => arr.filter(i => i.ts >= Date.now() - d * 86400000).sort((a,b)=>a.ts-b.ts);
+            const wd = f(u.weights, ranges.weight);
             if(charts.w) charts.w.destroy();
             charts.w = new Chart(document.getElementById('weightChart'), {
                 type: 'line', data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{label:'体重', data: wd.map(d=>d.val), borderColor: '#34c759', tension: 0.4, fill: true, backgroundColor: 'rgba(52, 199, 89, 0.1)', pointRadius: 4}] },
                 options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' } }
             });
-
-            // 血压心率图 (3条线)
-            const bd = filterData(u.bps, ranges.bp);
+            const bd = f(u.bps, ranges.bp);
             if(charts.bp) charts.bp.destroy();
             charts.bp = new Chart(document.getElementById('bpChart'), {
                 type: 'line', data: { labels: bd.map(d=>d.date.slice(5)), datasets: [
-                    {label:'收缩压(高)', data: bd.map(d=>d.high), borderColor: '#ff3b30', tension: 0.4, pointRadius: 4},
-                    {label:'舒张压(低)', data: bd.map(d=>d.low), borderColor: '#ff9500', tension: 0.4, pointRadius: 4},
+                    {label:'收缩压', data: bd.map(d=>d.high), borderColor: '#ff3b30', tension: 0.4, pointRadius: 4},
+                    {label:'舒张压', data: bd.map(d=>d.low), borderColor: '#ff9500', tension: 0.4, pointRadius: 4},
                     {label:'心率', data: bd.map(d=>d.hr), borderColor: '#007aff', tension: 0.4, pointRadius: 4}
                 ]},
                 options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' } }
@@ -326,7 +319,7 @@
         function saveWish() { users.find(x => x.id == curUid).wish = document.getElementById('wish-input').value; closeModal(); sync(); }
         function saveMood() { users.find(x => x.id == curUid).mood = document.getElementById('mood-input').value; closeModal(); sync(); }
         function saveUserManage() { const u = users.find(x => x.id == curUid); u.startW = parseFloat(document.getElementById('m-start').value); u.target = parseFloat(document.getElementById('m-target').value); closeModal(); sync(); }
-        function deleteUser(id) { if(confirm("确定注销？所有历史记录都将消失")) { users = users.filter(u=>u.id!==id); curUid=users[0]?.id||null; sync(); } }
+        function deleteUser(id) { if(confirm("注销后数据无法恢复，确定？")) { users = users.filter(u=>u.id!==id); curUid=users[0]?.id||null; sync(); } }
         function deleteInt(id) { users.find(x => x.id == curUid).interests = users.find(x => x.id == curUid).interests.filter(i=>i.id!==id); sync(); }
         function toggleInt(id) { const i = users.find(x => x.id == curUid).interests.find(it=>it.id==id); i.paused=!i.paused; sync(); }
         function deleteLog(id) { users.find(x => x.id == curUid).logs = users.find(x => x.id == curUid).logs.filter(l=>l.id!==id); sync(); }
