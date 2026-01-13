@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>两根电线杆</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <meta name="apple-mobile-web-app-title" content="缤纷日记"> <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069172.png"> <title>七彩梦幻健身日记</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -18,18 +20,19 @@
             font-family: 'Noto Sans SC', sans-serif;
             overflow: hidden;
             perspective: 1000px;
+            /* 确保在全屏模式下高度撑满 */
+            height: 100vh;
+            width: 100vw;
         }
 
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-        /* 樱花雨 */
         .sakura { position: fixed; top: -10%; z-index: -1; pointer-events: none; animation: fall linear infinite; }
         @keyframes fall {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
-        /* 统一浮动卡片 */
         .floating-card {
             background: rgba(255, 255, 255, 0.85);
             border: 4px solid white;
@@ -41,14 +44,12 @@
         }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* 各模块彩色边框和阴影 */
         .card-blue { border-color: #bae1ff; box-shadow: 0 10px 30px rgba(186, 225, 255, 0.4); }
         .card-green { border-color: #baffc9; box-shadow: 0 10px 30px rgba(186, 255, 201, 0.4); }
         .card-purple { border-color: #decaff; box-shadow: 0 10px 30px rgba(222, 202, 255, 0.4); }
         .card-yellow { border-color: #ffffba; box-shadow: 0 10px 30px rgba(255, 255, 186, 0.4); }
         .card-orange { border-color: #ffdfba; box-shadow: 0 10px 30px rgba(255, 223, 186, 0.4); }
 
-        /* 进度条流光 */
         .glow-bar {
             background: linear-gradient(90deg, #4dabf7, #3bc9db, #4dabf7);
             background-size: 200% auto;
@@ -56,20 +57,15 @@
         }
         @keyframes moveGradient { to { background-position: 200% center; } }
 
-        /* 滑动删除背景 */
         .swipe-container { position: relative; overflow: hidden; touch-action: pan-x; border-radius: 1.5rem; margin-bottom: 1rem; background: #ff6b6b !important; }
         .swipe-content { position: relative; z-index: 20; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); background: white !important; width: 100%; }
         .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; color: white; display: flex; align-items: center; justify-content: center; z-index: 10; font-weight: 900; }
 
-        /* 按钮与导航 */
         .btn-pop { background: #444; color: white; transition: all 0.2s; }
         .btn-pop:active { transform: scale(0.85); }
         .sidebar-active { background: #444 !important; color: white !important; transform: translateX(10px); }
 
         .text-pop { font-family: 'ZCOOL KuaiLe', cursive; }
-        .num-jump { display: inline-block; animation: jump 0.5s ease; }
-        @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -90,7 +86,6 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto no-scrollbar space-y-8 pb-10">
-        
         <section class="floating-card card-blue p-8">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-pop text-lg flex items-center gap-2 text-blue-500">💎 减重进化里程碑</h3>
@@ -183,7 +178,6 @@
     </div>
 
     <script>
-        // 核心逻辑保持不变，仅更新 UI 渲染部分的颜色类名
         let users = JSON.parse(localStorage.getItem('sf_colorful_v1') || '[]');
         let curUid = localStorage.getItem('sf_colorful_uid') || (users[0]?.id || null);
         let entryType = 'weight', chart = null;
@@ -208,7 +202,6 @@
             render();
         }
 
-        // 滑动删除交互
         let tStart = 0, currentSwipeEl = null;
         document.addEventListener('touchstart', e => {
             const container = e.target.closest('.swipe-container');
@@ -269,7 +262,6 @@
         }
 
         function render() {
-            // 导航
             document.getElementById('user-nav').innerHTML = users.map(u => `
                 <div class="swipe-container">
                     <div class="delete-action" onclick="deleteItem(${u.id}, 'user')">删除</div>
@@ -282,7 +274,6 @@
             const u = users.find(x => x.id == curUid); 
             if(!u) return;
 
-            // 进度条
             const sortedWeights = [...u.weights].sort((a,b)=>a.ts-b.ts);
             const startW = sortedWeights.length > 0 ? sortedWeights[0].val : u.target + 10;
             const curW = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length-1].val : startW;
@@ -294,7 +285,6 @@
             document.getElementById('start-w').innerText = startW + ' KG';
             document.getElementById('target-w').innerText = targetW + ' KG';
 
-            // 基础信息
             document.getElementById('display-name').innerText = u.name;
             document.getElementById('display-wish').innerText = '愿望：' + (u.wish || '暂无愿望');
             document.getElementById('mood-display').innerText = `✨ 今日觉悟: ${u.mood || '保持可爱，保持健康'}`;
@@ -304,7 +294,6 @@
             const tagEl = document.getElementById('status-tag');
             tagEl.innerText = (diff > 0 ? "+" : "") + diff;
 
-            // 兴趣习惯 - 紫色
             document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
                 const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
                 return `
@@ -325,7 +314,6 @@
                 </div>`;
             }).join('');
 
-            // 流水
             const gDate = document.getElementById('global-date').value;
             const logs = u.logs.filter(l => l.date === gDate);
             const logTpl = (l, color) => `
