@@ -3,187 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>甜心健身日记</title>
+    <title>幻彩甜心健身日记</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;900&display=swap');
         
+        :root { --p-deep: #ff4d6d; --p-light: #ff85a1; --p-soft: #ffccd5; }
+
         body { 
-            background: linear-gradient(135deg, #fff5f7 0%, #ffe4e9 100%);
-            color: #d63384;
+            background: linear-gradient(45deg, #fff0f3, #ffccd5, #fff0f3);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #c9184a;
             font-family: 'Noto Sans SC', sans-serif;
             overflow: hidden;
+            perspective: 1000px;
         }
 
-        /* 可爱气泡背景 */
-        .bubbles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; }
-        .bubble { position: absolute; bottom: -20px; background: rgba(255, 182, 193, 0.4); border-radius: 50%; animation: rise 15s infinite ease-in; }
-        @keyframes rise {
-            0% { transform: translateY(0) scale(1); opacity: 0.5; }
-            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+
+        /* 浮夸背景樱花 */
+        .sakura { position: fixed; top: -10%; z-index: -1; pointer-events: none; animation: fall linear infinite; }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
-        .pink-card {
-            background: rgba(255, 255, 255, 0.7);
-            border: 2px solid #ffdae0;
-            backdrop-filter: blur(10px);
-            border-radius: 2rem;
-            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.2);
+        /* 呼吸卡片 */
+        .floating-card {
+            background: rgba(255, 255, 255, 0.75);
+            border: 3px solid white;
+            backdrop-filter: blur(15px);
+            border-radius: 2.5rem;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.15);
+            animation: float 6s ease-in-out infinite;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .floating-card:hover { transform: scale(1.02) rotateX(2deg); box-shadow: 0 20px 45px rgba(255, 77, 109, 0.25); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        .btn-main { background: #ff758f; color: white; font-weight: 900; box-shadow: 0 4px 10px rgba(255, 117, 143, 0.3); }
-        .sidebar-active { background: #ff758f; color: white !important; box-shadow: 0 4px 12px rgba(255, 117, 143, 0.3); }
-
-        /* 滑动删除：修复重叠透明问题 */
-        .swipe-container { position: relative; overflow: hidden; touch-action: pan-x; border-radius: 1.2rem; margin-bottom: 0.75rem; background: #ff4d6d; }
-        .swipe-content { position: relative; z-index: 20; transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1); background: white; display: flex; align-items: center; width: 100%; }
-        .delete-action { 
-            position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
-            background: #ff4d6d; color: white; display: flex; align-items: center; 
-            justify-content: center; z-index: 10; font-weight: 900;
+        /* 炫彩进度条 */
+        .glow-bar {
+            position: relative;
+            background: linear-gradient(90deg, #ff85a1, #ff4d6d, #ff85a1);
+            background-size: 200% auto;
+            animation: moveGradient 2s linear infinite;
+            box-shadow: 0 0 15px rgba(255, 77, 109, 0.5);
         }
+        @keyframes moveGradient { to { background-position: 200% center; } }
 
-        .progress-fill { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        /* 滑动删除：强制背景隔离 */
+        .swipe-container { position: relative; overflow: hidden; touch-action: pan-x; border-radius: 1.5rem; margin-bottom: 1rem; background: #ff4d6d !important; }
+        .swipe-content { position: relative; z-index: 20; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); background: white !important; width: 100%; border: 2px solid transparent; }
+        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; color: white; display: flex; align-items: center; justify-content: center; z-index: 10; font-weight: 900; }
 
-        input, select, textarea {
-            background: white !important;
-            border: 2px solid #ffdae0 !important;
-            border-radius: 1rem !important;
-            color: #d63384 !important;
-            outline: none;
-        }
-        
+        .btn-pop { background: #ff4d6d; color: white; transition: all 0.2s; }
+        .btn-pop:active { transform: scale(0.85); filter: hue-rotate(20deg); }
+
+        .sidebar-active { background: #ff4d6d !important; color: white !important; transform: translateX(10px) scale(1.05); box-shadow: -5px 5px 15px rgba(255, 77, 109, 0.3); }
+
+        /* 各种文字特效 */
+        .text-pop { font-family: 'ZCOOL KuaiLe', cursive; }
+        .num-jump { display: inline-block; animation: jump 0.5s ease; }
+        @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex h-screen p-4 gap-4">
+<body class="flex h-screen p-4 gap-6">
 
-    <div class="bubbles" id="bubble-wrap"></div>
+    <div id="sakura-container"></div>
 
-    <aside class="w-64 flex flex-col p-6 pink-card">
-        <div class="flex items-center gap-3 mb-8 px-2">
-            <div class="w-10 h-10 rounded-2xl btn-main flex items-center justify-center"><i data-lucide="heart"></i></div>
-            <h1 class="font-900 text-xl tracking-tight">甜心日记</h1>
+    <aside class="w-72 flex flex-col p-6 floating-card">
+        <div class="flex flex-col items-center gap-2 mb-10">
+            <div class="w-16 h-16 rounded-3xl btn-pop flex items-center justify-center shadow-2xl rotate-12"><i data-lucide="heart" class="w-8 h-8 fill-current"></i></div>
+            <h1 class="text-pop text-2xl mt-2 tracking-widest">甜心实验室</h1>
         </div>
-        <nav id="user-nav" class="flex-1 space-y-2 overflow-y-auto no-scrollbar"></nav>
-        <div class="pt-4 border-t border-pink-200 space-y-2">
-            <button onclick="addUser()" class="w-full p-4 rounded-xl text-pink-400 hover:bg-pink-50 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="plus-circle" class="w-4 h-4"></i> 新增成员</button>
-            <button onclick="openManageModal()" class="w-full p-4 rounded-xl text-pink-400 hover:bg-pink-50 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="settings" class="w-4 h-4"></i> 档案设置</button>
+        <nav id="user-nav" class="flex-1 space-y-3 overflow-y-auto no-scrollbar px-2"></nav>
+        <div class="pt-6 border-t-2 border-dashed border-pink-200 space-y-3">
+            <button onclick="addUser()" class="btn-pop w-full p-4 rounded-2xl flex items-center justify-center gap-3 font-black"><i data-lucide="user-plus"></i> 召唤新成员</button>
+            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-pink-400 font-bold hover:bg-white flex items-center justify-center gap-3 transition-all"><i data-lucide="settings"></i> 成员档案</button>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto no-scrollbar space-y-6">
+    <main class="flex-1 overflow-y-auto no-scrollbar space-y-8 pb-10">
         
-        <section class="pink-card p-6">
-            <div class="flex justify-between items-end mb-3">
-                <span class="text-xs font-900">减重进度</span>
-                <span id="progress-text" class="text-sm font-black italic">0%</span>
+        <section class="floating-card p-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-pop text-lg flex items-center gap-2">💖 减重进化记录</h3>
+                <div class="bg-pink-100 px-4 py-1 rounded-full text-xs font-black" id="progress-percent">0%</div>
             </div>
-            <div class="w-full h-4 bg-pink-100 rounded-full overflow-hidden p-1 border border-pink-200">
-                <div id="progress-bar" class="progress-fill h-full bg-gradient-to-r from-pink-300 to-pink-500 rounded-full w-0"></div>
+            <div class="relative w-full h-8 bg-pink-100 rounded-full p-1.5 overflow-hidden">
+                <div id="progress-bar" class="glow-bar h-full rounded-full w-0 transition-all duration-1000"></div>
+                <div class="absolute inset-0 flex justify-center items-center text-[10px] font-black mix-blend-overlay uppercase tracking-tighter">Evolution Progress</div>
             </div>
-            <div class="flex justify-between mt-2 text-[10px] font-bold opacity-60 uppercase tracking-widest">
-                <span>初始: <span id="start-w">--</span>kg</span>
-                <span>目标: <span id="target-w">--</span>kg</span>
+            <div class="grid grid-cols-2 mt-4">
+                <div class="text-left"><p class="text-[10px] opacity-50 font-black">STARTING POINT</p><p class="text-xl font-black text-pink-400" id="start-w">-- KG</p></div>
+                <div class="text-right"><p class="text-[10px] opacity-50 font-black">GOAL TARGET</p><p class="text-xl font-black text-pink-600" id="target-w">-- KG</p></div>
             </div>
         </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <section class="lg:col-span-2 pink-card p-8 min-h-[260px] flex flex-col justify-between relative overflow-hidden">
-                <div class="flex justify-between items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <section class="lg:col-span-2 floating-card p-10 relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-pink-100 rounded-full opacity-30 group-hover:scale-150 transition-all duration-700"></div>
+                <div class="flex justify-between items-start relative z-10">
                     <div>
-                        <div class="flex items-center gap-4 mb-2">
-                            <h2 id="display-name" class="text-5xl font-900 tracking-tighter">--</h2>
-                            <div id="display-gender-icon"></div>
+                        <div class="flex items-center gap-6 mb-4">
+                            <h2 id="display-name" class="text-pop text-6xl tracking-tighter">--</h2>
+                            <div id="display-gender-icon" class="animate-bounce"></div>
                         </div>
-                        <p id="display-wish" class="text-sm font-bold text-pink-400">正在努力加载中...</p>
+                        <div class="inline-block bg-pink-500 text-white px-4 py-1 rounded-lg text-xs font-black shadow-lg" id="display-wish">--</div>
                     </div>
                     <div class="text-right">
-                        <span id="status-tag" class="text-6xl font-900">-.-</span>
-                        <p class="text-[10px] font-black opacity-50 mt-1 italic">离目标还差 (KG)</p>
+                        <div id="status-tag" class="text-7xl text-pop leading-none">0.0</div>
+                        <p class="text-xs font-black opacity-30 mt-2 italic tracking-widest">SURPLUS WEIGHT</p>
                     </div>
                 </div>
-                <div id="mood-display" class="mt-4 p-4 rounded-2xl bg-white/50 border border-pink-100 text-xs font-bold">心情状态: --</div>
+                <div id="mood-display" class="mt-8 p-5 rounded-3xl bg-white/80 border-2 border-dashed border-pink-200 text-sm font-bold italic shadow-inner">✨ 每日状态: --</div>
             </section>
 
-            <section class="pink-card p-8 flex flex-col">
+            <section class="floating-card p-8 flex flex-col">
                 <div class="flex justify-between items-center mb-6">
-                    <h4 class="font-900 text-sm flex items-center gap-2"><i data-lucide="sparkles" class="text-pink-400"></i> 我的好习惯</h4>
-                    <button onclick="addInterest()" class="btn-main w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    <h4 class="text-pop text-lg flex items-center gap-2"><i data-lucide="flame" class="text-orange-400"></i> 热血习惯</h4>
+                    <button onclick="addInterest()" class="btn-pop w-10 h-10 rounded-full flex items-center justify-center shadow-xl"><i data-lucide="plus"></i></button>
                 </div>
-                <div id="interest-list" class="space-y-3 overflow-y-auto no-scrollbar flex-1"></div>
+                <div id="interest-list" class="space-y-4 overflow-y-auto no-scrollbar flex-1"></div>
             </section>
         </div>
 
-        <section class="pink-card p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-sm font-900 flex items-center gap-2"><i data-lucide="trending-down"></i> 体重变化曲线</h3>
-                <div class="flex gap-2 text-[10px] font-bold">
-                    <input type="date" id="chart-start" onchange="renderChart()" class="p-1">
-                    <input type="date" id="chart-end" onchange="renderChart()" class="p-1">
+        <section class="floating-card p-8">
+            <div class="flex justify-between items-center mb-10">
+                <h3 class="text-pop text-xl flex items-center gap-2"><i data-lucide="activity"></i> 体重能量谱图</h3>
+                <div class="flex gap-3">
+                    <input type="date" id="chart-start" onchange="renderChart()" class="text-xs p-2 rounded-xl">
+                    <input type="date" id="chart-end" onchange="renderChart()" class="text-xs p-2 rounded-xl">
                 </div>
             </div>
-            <div class="h-64 w-full"><canvas id="weightChart"></canvas></div>
+            <div class="h-80 w-full"><canvas id="weightChart"></canvas></div>
         </section>
 
-        <section class="pink-card p-8">
+        <section class="floating-card p-8">
             <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
-                <input type="date" id="global-date" onchange="render()" class="font-900 text-2xl text-pink-500">
-                <div class="flex gap-1 p-1 bg-pink-100/50 rounded-2xl">
-                    <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2 rounded-xl font-900 text-xs transition-all">测体重</button>
-                    <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2 rounded-xl font-900 text-xs transition-all">吃东西</button>
-                    <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2 rounded-xl font-900 text-xs transition-all">做运动</button>
+                <div class="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-inner border-2 border-pink-100">
+                    <i data-lucide="calendar" class="text-pink-500"></i>
+                    <input type="date" id="global-date" onchange="render()" class="font-black text-xl text-pink-500 bg-transparent border-none">
+                </div>
+                <div class="flex gap-2 p-2 bg-pink-100 rounded-3xl">
+                    <button onclick="setLogType('weight')" id="tab-weight" class="px-8 py-3 rounded-2xl font-black text-xs transition-all">秤体重</button>
+                    <button onclick="setLogType('food')" id="tab-food" class="px-8 py-3 rounded-2xl font-black text-xs transition-all">能量补给</button>
+                    <button onclick="setLogType('sport')" id="tab-sport" class="px-8 py-3 rounded-2xl font-black text-xs transition-all">卡路里燃烧</button>
                 </div>
             </div>
             <div id="entry-form" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
         </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 pb-20">
             <div id="list-food"></div>
             <div id="list-sport"></div>
         </div>
     </main>
 
-    <div id="manage-modal" class="hidden fixed inset-0 bg-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-6">
-        <div class="pink-card p-10 w-full max-w-2xl border-white bg-white/90 shadow-2xl">
-            <h2 class="text-2xl font-900 mb-8 flex items-center gap-3"><i data-lucide="user"></i> 个人档案设置</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1"><label class="text-xs font-bold opacity-60 ml-2">姓名</label><input type="text" id="m-name" class="w-full p-4 font-bold"></div>
-                <div class="space-y-1"><label class="text-xs font-bold opacity-60 ml-2">性别</label><select id="m-gender" class="w-full p-4 font-bold"><option value="female">女生</option><option value="male">男生</option></select></div>
-                <div class="space-y-1"><label class="text-xs font-bold opacity-60 ml-2">目标体重 (KG)</label><input type="number" id="m-target" class="w-full p-4 font-bold"></div>
-                <div class="space-y-1"><label class="text-xs font-bold opacity-60 ml-2">减重愿望</label><input type="text" id="m-wish" class="w-full p-4 font-bold"></div>
-                <div class="space-y-1 md:col-span-2"><label class="text-xs font-bold opacity-60 ml-2">今日寄语</label><textarea id="m-mood" class="w-full p-4 font-bold h-24"></textarea></div>
+    <div id="manage-modal" class="hidden fixed inset-0 bg-pink-500/30 backdrop-blur-2xl z-50 flex items-center justify-center p-6">
+        <div class="floating-card p-12 w-full max-w-2xl bg-white/95 border-pink-400">
+            <h2 class="text-pop text-3xl mb-10 flex items-center gap-4"><i data-lucide="heart-pulse" class="animate-pulse text-pink-500"></i> 修改 DNA 档案</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2"><label class="text-xs font-black opacity-50 ml-4">代号名称</label><input type="text" id="m-name" class="w-full p-5 rounded-2xl shadow-inner"></div>
+                <div class="space-y-2"><label class="text-xs font-black opacity-50 ml-4">性别选择</label><select id="m-gender" class="w-full p-5 rounded-2xl shadow-inner"><option value="female">美少女</option><option value="male">帅气男孩</option></select></div>
+                <div class="space-y-2"><label class="text-xs font-black opacity-50 ml-4">究极目标体重 (KG)</label><input type="number" id="m-target" class="w-full p-5 rounded-2xl shadow-inner"></div>
+                <div class="space-y-2"><label class="text-xs font-black opacity-50 ml-4">心中所愿</label><input type="text" id="m-wish" class="w-full p-5 rounded-2xl shadow-inner"></div>
+                <div class="space-y-2 md:col-span-2"><label class="text-xs font-black opacity-50 ml-4">今日觉悟</label><textarea id="m-mood" class="w-full p-5 rounded-2xl shadow-inner h-24"></textarea></div>
             </div>
-            <div class="flex gap-4 mt-10">
-                <button onclick="closeManageModal()" class="flex-1 font-black opacity-40">返回</button>
-                <button onclick="saveUserManage()" class="flex-1 p-5 btn-main rounded-2xl shadow-lg shadow-pink-200">保存更新</button>
+            <div class="flex gap-6 mt-12">
+                <button onclick="closeManageModal()" class="flex-1 font-black opacity-40 hover:opacity-100 transition-all">撤退</button>
+                <button onclick="saveUserManage()" class="flex-1 p-6 btn-pop rounded-3xl text-lg font-black shadow-2xl">确 认 觉 醒</button>
             </div>
         </div>
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('sf_cute_v1') || '[]');
-        let curUid = localStorage.getItem('sf_cute_uid') || (users[0]?.id || null);
+        let users = JSON.parse(localStorage.getItem('sf_ultra_v1') || '[]');
+        let curUid = localStorage.getItem('sf_ultra_uid') || (users[0]?.id || null);
         let entryType = 'weight', chart = null;
 
-        // 背景气泡生成
-        function createBubbles() {
-            const wrap = document.getElementById('bubble-wrap');
-            for(let i=0; i<15; i++) {
-                const b = document.createElement('div');
-                b.className = 'bubble';
-                const size = Math.random() * 60 + 20 + 'px';
-                b.style.width = size; b.style.height = size;
-                b.style.left = Math.random() * 100 + '%';
-                b.style.animationDelay = Math.random() * 10 + 's';
-                b.style.animationDuration = Math.random() * 10 + 10 + 's';
-                wrap.appendChild(b);
-            }
+        // 浮夸背景樱花生成
+        function createSakura() {
+            const container = document.getElementById('sakura-container');
+            const petal = document.createElement('div');
+            petal.className = 'sakura';
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.width = petal.style.height = Math.random() * 15 + 10 + 'px';
+            petal.style.backgroundColor = ['#ffccd5','#ffb3c1','#ff85a1'][Math.floor(Math.random()*3)];
+            petal.style.borderRadius = '50% 0 50% 50%';
+            petal.style.animationDuration = Math.random() * 5 + 5 + 's';
+            container.appendChild(petal);
+            setTimeout(() => petal.remove(), 10000);
+        }
+        setInterval(createSakura, 500);
+
+        // 核心同步与逻辑
+        function sync() {
+            localStorage.setItem('sf_ultra_v1', JSON.stringify(users));
+            if(curUid) localStorage.setItem('sf_ultra_uid', curUid);
+            render();
         }
 
-        // 滑动删除交互修复
+        // 滑动删除交互
         let tStart = 0, currentSwipeEl = null;
         document.addEventListener('touchstart', e => {
             const container = e.target.closest('.swipe-container');
@@ -191,48 +217,38 @@
                 document.querySelectorAll('.swipe-content').forEach(el => { if(el !== container.querySelector('.swipe-content')) el.style.transform = 'translateX(0)'; });
                 tStart = e.touches[0].clientX;
                 currentSwipeEl = container.querySelector('.swipe-content');
-                currentSwipeEl.style.transition = 'none';
             }
-        }, {passive: true});
-
+        });
         document.addEventListener('touchmove', e => {
             if (!currentSwipeEl) return;
             const diff = e.touches[0].clientX - tStart;
             if (diff < 0) currentSwipeEl.style.transform = `translateX(${Math.max(diff, -80)}px)`;
-            if (diff > 0) currentSwipeEl.style.transform = `translateX(0)`;
-        }, {passive: true});
-
+            else currentSwipeEl.style.transform = `translateX(0)`;
+        });
         document.addEventListener('touchend', e => {
             if (!currentSwipeEl) return;
-            currentSwipeEl.style.transition = 'transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1)';
             const diff = e.changedTouches[0].clientX - tStart;
             currentSwipeEl.style.transform = diff < -40 ? `translateX(-80px)` : `translateX(0)`;
             currentSwipeEl = null;
         });
 
-        function sync() {
-            localStorage.setItem('sf_cute_v1', JSON.stringify(users));
-            if(curUid) localStorage.setItem('sf_cute_uid', curUid);
-            render();
-        }
-
         function addUser() {
-            const name = prompt("输入新成员的昵称:"); if(!name) return;
+            const name = prompt("输入神秘代号:"); if(!name) return;
             const u = { id: Date.now(), name, target: 50, gender: 'female', weights: [], logs: [], interests: [] };
             users.push(u); curUid = u.id; sync();
         }
 
         function deleteItem(id, listType) {
             const u = users.find(x => x.id == curUid);
-            if(listType === 'interest') u.interests = u.interests.filter(i => i.id !== id);
-            else if(listType === 'user') { users = users.filter(u => u.id !== id); curUid = users[0]?.id || null; }
+            if(listType === 'user') { users = users.filter(u => u.id !== id); curUid = users[0]?.id || null; }
+            else if(listType === 'interest') u.interests = u.interests.filter(i => i.id !== id);
             else u.logs = u.logs.filter(l => l.id !== id);
             sync();
         }
 
         function toggleInterest(id) {
             const u = users.find(x => x.id == curUid);
-            const i = u.interests.find(x => x.id === id);
+            const i = u.interests.find(i => i.id === id);
             i.paused = !i.paused;
             sync();
         }
@@ -247,7 +263,7 @@
                 if (!val) return;
                 const idx = u.weights.findIndex(w => w.date === date && w.slot === slot);
                 if (idx > -1) {
-                    if (confirm(`记录已存在，要更新为 ${val}kg 吗？`)) u.weights[idx].val = val;
+                    if (confirm(`该时段已有记录 ${u.weights[idx].val}KG，要改写吗？`)) u.weights[idx].val = val;
                 } else {
                     u.weights.push({ id: Date.now(), val, slot, date, ts: new Date(date).getTime() });
                 }
@@ -256,7 +272,7 @@
                 if (!name || isNaN(cal)) return;
                 const idx = u.logs.findIndex(l => l.date === date && l.name === name && l.type === entryType);
                 if (idx > -1) {
-                    if (confirm(`今日已记录过 "${name}"，要更新卡路里吗？`)) u.logs[idx].cal = cal;
+                    if (confirm(`已有同名记录，要更新卡路里吗？`)) u.logs[idx].cal = cal;
                 } else {
                     u.logs.unshift({ id: Date.now(), type: entryType, name, cal, slot, date });
                 }
@@ -265,60 +281,69 @@
         }
 
         function render() {
-            // 用户导航
-            document.getElementById('user-nav').innerHTML = users.map(u => `
-                <div class="swipe-container">
-                    <div class="delete-action" onclick="deleteItem(${u.id}, 'user')">删除</div>
-                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-4 cursor-pointer ${curUid == u.id ? 'sidebar-active text-white' : 'text-pink-400 hover:bg-pink-50'}">
-                        <span class="font-black text-sm flex-1">${u.name}</span>
-                        <i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-3 h-3 opacity-50"></i>
+            const uNav = document.getElementById('user-nav');
+            uNav.innerHTML = users.map(u => `
+                <div class="swipe-container shadow-lg">
+                    <div class="delete-action" onclick="deleteItem(${u.id}, 'user')"><i data-lucide="trash-2"></i></div>
+                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-5 cursor-pointer flex items-center gap-4 ${curUid == u.id ? 'sidebar-active' : 'text-pink-400'}">
+                        <div class="w-2 h-2 rounded-full ${curUid == u.id ? 'bg-white' : 'bg-pink-200'}"></div>
+                        <span class="font-black text-sm flex-1 uppercase">${u.name}</span>
+                        <i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-4 h-4 opacity-30"></i>
                     </div>
                 </div>`).join('');
             
             const u = users.find(x => x.id == curUid); 
-            if(!u) return;
+            if(!u) {
+                document.querySelector('main').classList.add('opacity-0');
+                return;
+            } else {
+                document.querySelector('main').classList.remove('opacity-0');
+            }
 
-            // 顶部进度条逻辑
+            // 进度条计算（各成员数据独立）
             const sortedWeights = [...u.weights].sort((a,b)=>a.ts-b.ts);
             const startW = sortedWeights.length > 0 ? sortedWeights[0].val : u.target + 10;
             const curW = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length-1].val : startW;
             const targetW = u.target;
             
             let progress = 0;
-            if(startW > targetW) {
-                progress = Math.max(0, Math.min(100, ((startW - curW) / (startW - targetW)) * 100));
-            } else {
-                progress = curW <= targetW ? 100 : 0;
-            }
+            if(startW > targetW) progress = Math.max(0, Math.min(100, ((startW - curW) / (startW - targetW)) * 100));
+            else progress = curW <= targetW ? 100 : 0;
 
             document.getElementById('progress-bar').style.width = progress + '%';
-            document.getElementById('progress-text').innerText = Math.round(progress) + '%';
-            document.getElementById('start-w').innerText = startW;
-            document.getElementById('target-w').innerText = targetW;
+            const pText = document.getElementById('progress-percent');
+            pText.innerText = Math.round(progress) + '%';
+            pText.classList.add('num-jump'); setTimeout(()=>pText.classList.remove('num-jump'), 500);
 
-            // 基础信息
+            document.getElementById('start-w').innerText = startW + ' KG';
+            document.getElementById('target-w').innerText = targetW + ' KG';
             document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-wish').innerText = u.wish || '快去写下你的减重愿望吧~';
-            document.getElementById('mood-display').innerText = `今日寄语: ${u.mood || '保持可爱，保持健康'}`;
-            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-8 h-8 ${u.gender==='male'?'text-blue-400':'text-pink-400'}"></i>`;
+            document.getElementById('display-wish').innerText = '愿望：' + (u.wish || '暂无愿望');
+            document.getElementById('mood-display').innerText = `✨ 每日觉悟: ${u.mood || '身体健康，万事如意'}`;
+            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-10 h-10 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
             
             const diff = (curW - targetW).toFixed(1);
-            document.getElementById('status-tag').innerText = (diff > 0 ? "+" : "") + diff;
+            const tagEl = document.getElementById('status-tag');
+            tagEl.innerText = (diff > 0 ? "+" : "") + diff;
+            tagEl.classList.add('num-jump'); setTimeout(()=>tagEl.classList.remove('num-jump'), 500);
 
-            // 兴趣列表
+            // 兴趣习惯
             document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
                 const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
                 return `
-                <div class="swipe-container">
+                <div class="swipe-container shadow-md">
                     <div class="delete-action" onclick="deleteItem(${i.id}, 'interest')">删除</div>
-                    <div class="swipe-content p-4 border border-pink-100 flex flex-col items-stretch">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-black ${i.paused ? 'opacity-40' : ''}">${i.name}</span>
-                            <button onclick="toggleInterest(${i.id})" class="text-pink-400">
-                                <i data-lucide="${i.paused ? 'play' : 'pause'}" class="w-4 h-4"></i>
-                            </button>
+                    <div class="swipe-content p-5 border-2 border-pink-100 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full btn-pop flex items-center justify-center ${i.paused ? 'grayscale' : 'animate-spin-slow'}">
+                            <i data-lucide="${i.paused ? 'pause' : 'zap'}" class="w-5 h-5"></i>
                         </div>
-                        <div class="text-[9px] font-bold opacity-40 uppercase">已坚持 ${days} 天 ${i.paused ? '(已暂停)' : ''}</div>
+                        <div class="flex-1">
+                            <div class="font-black text-sm">${i.name}</div>
+                            <div class="text-[10px] opacity-40 font-black">已坚持 ${days} 天 ${i.paused ? '(暂停中)' : ''}</div>
+                        </div>
+                        <button onclick="toggleInterest(${i.id})" class="text-pink-300 hover:text-pink-500 transition-colors">
+                            <i data-lucide="${i.paused ? 'play' : 'square'}" class="w-5 h-5"></i>
+                        </button>
                     </div>
                 </div>`;
             }).join('');
@@ -326,20 +351,25 @@
             // 流水
             const gDate = document.getElementById('global-date').value;
             const logs = u.logs.filter(l => l.date === gDate);
-            const logTpl = (l) => `
-                <div class="swipe-container">
+            const logTpl = (l, color) => `
+                <div class="swipe-container shadow-sm">
                     <div class="delete-action" onclick="deleteItem(${l.id}, 'log')">删除</div>
-                    <div class="swipe-content p-4 border border-pink-50 flex justify-between items-center">
-                        <div>
-                            <div class="font-black text-sm">${l.name}</div>
-                            <div class="text-[9px] opacity-40 font-bold">${l.slot}</div>
+                    <div class="swipe-content p-4 border-2 border-pink-50 flex justify-between items-center group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-${color}-100 flex items-center justify-center text-${color}-500 group-hover:rotate-12 transition-transform">
+                                <i data-lucide="${l.type==='food'?'coffee':'flame'}" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="font-black text-sm">${l.name}</div>
+                                <div class="text-[9px] font-black opacity-30">${l.slot}</div>
+                            </div>
                         </div>
-                        <div class="text-right text-pink-500 font-black">${l.cal} 千卡</div>
+                        <div class="text-right font-black text-${color}-500">${l.cal} KCAL</div>
                     </div>
                 </div>`;
             
-            document.getElementById('list-food').innerHTML = `<h4 class="text-xs font-black text-pink-400 px-2 mb-3">饮食摄入 >></h4>` + logs.filter(l=>l.type==='food').map(logTpl).join('');
-            document.getElementById('list-sport').innerHTML = `<h4 class="text-xs font-black text-blue-400 px-2 mb-3">运动消耗 >></h4>` + logs.filter(l=>l.type==='sport').map(logTpl).join('');
+            document.getElementById('list-food').innerHTML = `<h4 class="text-pop text-pink-500 mb-4 ml-2">🍭 能量补给清单</h4>` + logs.filter(l=>l.type==='food').map(l=>logTpl(l, 'pink')).join('');
+            document.getElementById('list-sport').innerHTML = `<h4 class="text-pop text-blue-500 mb-4 ml-2">🔥 脂肪燃烧报告</h4>` + logs.filter(l=>l.type==='sport').map(l=>logTpl(l, 'blue')).join('');
 
             renderEntryForm(); renderChart(); lucide.createIcons();
         }
@@ -349,14 +379,14 @@
             const container = document.getElementById('entry-form');
             ['weight', 'food', 'sport'].forEach(t => {
                 const btn = document.getElementById('tab-'+t);
-                btn.className = entryType === t ? "px-6 py-2 rounded-xl font-900 text-xs bg-pink-500 text-white shadow-lg" : "px-6 py-2 rounded-xl font-900 text-xs text-pink-300";
+                btn.className = entryType === t ? "px-8 py-3 rounded-2xl font-black text-xs bg-pink-500 text-white shadow-xl scale-110" : "px-8 py-3 rounded-2xl font-black text-xs text-pink-300";
             });
 
             if(entryType === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="p-4 font-bold text-xs"><option value="晨间">晨间</option><option value="晚间">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重(KG)" class="p-4 font-bold md:col-span-2 text-xs"><button onclick="submitEntry()" class="btn-main p-4 rounded-xl text-xs">记录</button>`;
+                container.innerHTML = `<select id="e-slot" class="p-4 rounded-2xl shadow-inner font-black text-xs"><option value="晨间">早晨称重</option><option value="晚间">睡前称重</option></select><input type="number" id="e-val" step="0.1" placeholder="今日体重(KG)" class="p-4 rounded-2xl shadow-inner font-black md:col-span-2 text-xs"><button onclick="submitEntry()" class="btn-pop p-4 rounded-2xl font-black text-xs">记录能量</button>`;
             } else {
-                const slots = entryType === 'food' ? ["早餐","午餐","晚餐","加餐"] : ["有氧","无氧","拉伸"];
-                container.innerHTML = `<select id="e-slot" class="p-4 font-bold text-xs">${slots.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><input type="text" id="e-name" placeholder="名称" class="p-4 font-bold text-xs"><input type="number" id="e-cal" placeholder="千卡" class="p-4 font-bold text-xs"><button onclick="submitEntry()" class="btn-main p-4 rounded-xl text-xs">添加</button>`;
+                const slots = entryType === 'food' ? ["早餐","午餐","晚餐","深夜食堂"] : ["有氧运动","无氧撸铁","拉伸修整"];
+                container.innerHTML = `<select id="e-slot" class="p-4 rounded-2xl shadow-inner font-black text-xs">${slots.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><input type="text" id="e-name" placeholder="具体名称" class="p-4 rounded-2xl shadow-inner font-black text-xs"><input type="number" id="e-cal" placeholder="卡路里" class="p-4 rounded-2xl shadow-inner font-black text-xs"><button onclick="submitEntry()" class="btn-pop p-4 rounded-2xl font-black text-xs">确认添加</button>`;
             }
         }
 
@@ -372,17 +402,22 @@
                     labels: sorted.map(x => x.date.slice(5) + ' ' + x.slot),
                     datasets: [{ 
                         data: sorted.map(x=>x.val), 
-                        borderColor: '#ff758f', 
-                        borderWidth: 4, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#fff',
-                        backgroundColor: 'rgba(255, 117, 143, 0.1)'
+                        borderColor: '#ff4d6d', borderWidth: 6, tension: 0.4, fill: true,
+                        pointRadius: 6, pointHoverRadius: 10, pointBackgroundColor: '#fff',
+                        backgroundColor: (context) => {
+                            const g = ctx.createLinearGradient(0, 0, 0, 400);
+                            g.addColorStop(0, 'rgba(255, 77, 109, 0.3)');
+                            g.addColorStop(1, 'rgba(255, 77, 109, 0)');
+                            return g;
+                        }
                     }]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
+                    plugins: { tooltip: { backgroundColor: '#ff4d6d', padding: 15, titleFont: { size: 14 } }, legend: { display: false } },
                     scales: { 
-                        y: { grid: { color: '#ffeeef' }, ticks: { color: '#ff758f', font: { weight: 'bold' } } },
-                        x: { grid: { display: false }, ticks: { color: '#ff758f', font: { size: 9 } } }
+                        y: { border: { display: false }, grid: { color: 'rgba(255, 77, 109, 0.1)' }, ticks: { color: '#ff4d6d', font: { weight: 'bold' } } },
+                        x: { border: { display: false }, grid: { display: false }, ticks: { color: '#ff4d6d', font: { size: 10 } } }
                     }
                 }
             });
@@ -390,7 +425,7 @@
 
         function addInterest() {
             const u = users.find(x => x.id == curUid); if(!u) return;
-            const name = prompt("想养成什么好习惯呢？");
+            const name = prompt("输入要开启的热血习惯：");
             if(name) { u.interests.push({ id: Date.now(), name, start: Date.now(), paused: false }); sync(); }
         }
 
@@ -414,7 +449,13 @@
             closeManageModal(); sync();
         }
 
-        window.onload = () => { createBubbles(); sync(); };
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('global-date').value = today;
+            document.getElementById('chart-end').value = today;
+            document.getElementById('chart-start').value = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+            sync(); 
+        };
     </script>
 </body>
-</html>      
+</html>
