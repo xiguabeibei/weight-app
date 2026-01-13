@@ -3,46 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SmartFit">
-    
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3034/3034875.png">
 
-    <title>SmartFit Persona v4</title>
+    <title>SmartFit Pro v5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
-        
         :root { --accent: #f472b6; --bg-gradient: linear-gradient(135deg, #fff5f7 0%, #fef2f2 100%); }
         .theme-female { --accent: #f472b6; --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #fff 100%); }
         .theme-male { --accent: #3b82f6; --bg-gradient: linear-gradient(135deg, #eff6ff 0%, #fff 100%); }
-
-        body { 
-            font-family: 'Nunito', sans-serif; 
-            background: var(--bg-gradient); 
-            transition: background 0.5s ease;
-            height: 100vh;
-            /* 适配 App 顶部的安全距离 */
-            padding-top: env(safe-area-inset-top);
-        }
-
-        /* 像真正的 App 一样禁止文字选中和长按弹出菜单 */
+        body { font-family: 'Nunito', sans-serif; background: var(--bg-gradient); transition: background 0.5s ease; height: 100vh; padding-top: env(safe-area-inset-top); }
         * { -webkit-touch-callout: none; -webkit-user-select: none; }
         input, textarea { -webkit-user-select: text; }
-
         .card { background: white; border-radius: 2rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.01); }
-        
-        @media (prefers-color-scheme: dark) {
-            body { background: #0f172a !important; color: #f1f5f9; }
-            .card { background: #1e293b !important; border-color: #334155 !important; }
-            .text-slate-800, .text-slate-700 { color: #f8fafc !important; }
-            input, select, textarea { background: #334155 !important; color: white !important; }
-        }
-
         .sidebar-active { background: var(--accent); color: white !important; box-shadow: 0 8px 20px -4px var(--accent); }
         .btn-accent { background: var(--accent); color: white; transition: all 0.2s; }
         .btn-accent:active { transform: scale(0.96); opacity: 0.9; }
@@ -59,9 +37,9 @@
             <h1 class="font-900 text-xl tracking-tight">SmartFit</h1>
         </div>
         <nav id="user-nav" class="flex-1 space-y-3 overflow-y-auto no-scrollbar"></nav>
-        <div class="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-            <button onclick="addUser()" class="w-full p-4 rounded-2xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增成员</button>
-            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-cog" class="w-4 h-4"></i> 用户管理</button>
+        <div class="pt-6 mt-4 border-t border-slate-100 space-y-2">
+            <button onclick="addUser()" class="w-full p-4 rounded-2xl text-slate-500 hover:bg-slate-50 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增成员</button>
+            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-slate-500 hover:bg-slate-50 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-cog" class="w-4 h-4"></i> 用户管理</button>
         </div>
     </aside>
 
@@ -87,37 +65,33 @@
                     </div>
                     <div class="mt-8">
                         <div class="flex justify-between text-xs font-black mb-3">
-                            <span id="display-mood" class="text-slate-400">--</span>
+                            <span id="display-mood" class="text-slate-400 italic">--</span>
                             <span id="prog-percent" class="text-accent">0%</span>
                         </div>
-                        <div class="h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full"><div id="progress-fill" class="progress-fill h-full w-0 rounded-full"></div></div>
+                        <div class="h-3.5 bg-slate-100 rounded-full"><div id="progress-fill" class="progress-fill h-full w-0 rounded-full"></div></div>
                     </div>
                 </div>
+
                 <div class="card p-8 flex flex-col">
-                    <h4 class="font-900 text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="flame" class="text-accent w-5 h-5"></i> 兴趣爱好</h4>
-                    <div id="display-hobby" class="flex flex-wrap gap-2"></div>
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="font-900 text-slate-800 flex items-center gap-2"><i data-lucide="heart" class="text-accent w-5 h-5"></i> 近日兴趣</h4>
+                        <button onclick="addInterest()" class="text-accent hover:scale-110 transition-transform"><i data-lucide="plus-circle" class="w-5 h-5"></i></button>
+                    </div>
+                    <div id="interest-list" class="space-y-3 overflow-y-auto no-scrollbar"></div>
                 </div>
             </div>
 
             <div class="card p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="font-900 text-slate-700 text-lg">体重历史趋势</h3>
-                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                        <button onclick="updateRange(7)" id="r7" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">7天</button>
-                        <button onclick="updateRange(30)" id="r30" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">30天</button>
-                        <button onclick="updateRange(90)" id="r90" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">90天</button>
-                    </div>
-                </div>
                 <div class="h-64 w-full"><canvas id="weightChart"></canvas></div>
             </div>
 
             <div class="card p-8">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
                     <div class="flex items-center gap-4">
-                        <h3 class="font-900 text-slate-800 text-xl">数据记录</h3>
-                        <input type="date" id="global-date" onchange="render()" class="bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl font-bold border-none ring-2 ring-slate-100 outline-none">
+                        <h3 class="font-900 text-slate-800 text-xl">日常记录</h3>
+                        <input type="date" id="global-date" onchange="render()" class="bg-slate-50 px-4 py-2 rounded-xl font-bold border-none outline-none ring-2 ring-slate-100">
                     </div>
-                    <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+                    <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl">
                         <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2 rounded-xl font-black text-sm">体重</button>
                         <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2 rounded-xl font-black text-sm">饮食</button>
                         <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2 rounded-xl font-black text-sm">运动</button>
@@ -128,11 +102,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
                 <div class="space-y-4">
-                    <h4 class="font-900 text-slate-800 italic flex justify-between"><span>饮食 Intake</span><span id="date-label-food" class="text-xs font-normal text-slate-300"></span></h4>
+                    <h4 class="font-900 text-slate-800 italic">饮食 Intake</h4>
                     <div id="list-food" class="space-y-3"></div>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-900 text-slate-800 italic flex justify-between"><span>运动 Burn</span><span id="date-label-sport" class="text-xs font-normal text-slate-300"></span></h4>
+                    <h4 class="font-900 text-slate-800 italic">运动 Burn</h4>
                     <div id="list-sport" class="space-y-3"></div>
                 </div>
             </div>
@@ -140,15 +114,14 @@
     </main>
 
     <div id="manage-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-6">
-        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl">
             <h2 class="text-3xl font-900 mb-8">档案编辑</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <input type="text" id="m-name" placeholder="姓名" class="bg-slate-50 p-5 rounded-2xl font-bold border-none outline-none">
-                <select id="m-gender" class="bg-slate-50 p-5 rounded-2xl font-bold border-none"><option value="female">女生 (粉色)</option><option value="male">男生 (蓝色)</option></select>
-                <input type="number" id="m-age" placeholder="年龄" class="bg-slate-50 p-5 rounded-2xl font-bold border-none">
-                <input type="number" id="m-target" placeholder="目标体重 (kg)" class="bg-slate-50 p-5 rounded-2xl font-bold border-none">
-                <input type="text" id="m-wish" placeholder="愿望/动力" class="w-full bg-slate-50 p-5 rounded-2xl font-bold border-none md:col-span-2">
-                <textarea id="m-mood" placeholder="最近的心情..." class="w-full bg-slate-50 p-5 rounded-2xl font-bold border-none h-24 md:col-span-2"></textarea>
+                <select id="m-gender" class="bg-slate-50 p-5 rounded-2xl font-bold border-none"><option value="female">女生</option><option value="male">男生</option></select>
+                <input type="number" id="m-target" placeholder="目标体重(kg)" class="bg-slate-50 p-5 rounded-2xl font-bold border-none">
+                <input type="text" id="m-wish" placeholder="减肥愿望" class="bg-slate-50 p-5 rounded-2xl font-bold border-none">
+                <textarea id="m-mood" placeholder="心情..." class="bg-slate-50 p-5 rounded-2xl font-bold border-none h-24 md:col-span-2"></textarea>
             </div>
             <div class="flex gap-4 mt-10">
                 <button onclick="closeManageModal()" class="flex-1 font-black text-slate-400">取消</button>
@@ -158,107 +131,168 @@
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('sf_persona_v4') || '[]');
-        let curUid = localStorage.getItem('sf_persona_uid_v4') || null;
-        let activeRange = 30, entryType = 'weight', chart = null;
+        let users = JSON.parse(localStorage.getItem('sf_persona_v5') || '[]');
+        let curUid = localStorage.getItem('sf_persona_uid_v5') || null;
+        let entryType = 'weight', chart = null;
         document.getElementById('global-date').valueAsDate = new Date();
 
+        const icons = {
+            "早餐": "coffee", "午餐": "utensils", "晚餐": "moon", "点心": "cookie",
+            "有航": "wind", "无氧": "dumbbell", "拉伸": "accessibility", "有氧": "timer"
+        };
+
         function sync() {
-            localStorage.setItem('sf_persona_v4', JSON.stringify(users));
-            if(curUid) localStorage.setItem('sf_persona_uid_v4', curUid);
+            localStorage.setItem('sf_persona_v5', JSON.stringify(users));
+            if(curUid) localStorage.setItem('sf_persona_uid_v5', curUid);
             applyTheme(); render();
         }
+
         function applyTheme() {
             const u = users.find(x => x.id == curUid);
             document.body.classList.remove('theme-female', 'theme-male');
             if(u) document.body.classList.add(u.gender === 'male' ? 'theme-male' : 'theme-female');
         }
+
         function addUser() {
             const name = prompt("姓名:"); if(!name) return;
-            const u = { id: Date.now(), name, target: 60, gender: 'female', weights: [], logs: [] };
+            const u = { id: Date.now(), name, target: 60, gender: 'female', weights: [], logs: [], interests: [] };
             users.push(u); curUid = u.id; sync(); openManageModal();
         }
+
+        function addInterest() {
+            const u = users.find(x => x.id == curUid); if(!u) return;
+            const name = prompt("输入兴趣名称:");
+            const dur = prompt("持续时间 (如: 3周 / 5天):");
+            if(name) {
+                if(!u.interests) u.interests = [];
+                u.interests.push({ id: Date.now(), name, dur });
+                sync();
+            }
+        }
+
+        function deleteInterest(id) {
+            const u = users.find(x => x.id == curUid);
+            u.interests = u.interests.filter(i => i.id !== id);
+            sync();
+        }
+
+        function deleteLog(id) {
+            const u = users.find(x => x.id == curUid);
+            u.logs = u.logs.filter(l => l.id !== id);
+            sync();
+        }
+
         function openManageModal() {
             const u = users.find(x => x.id == curUid); if(!u) return;
             document.getElementById('m-name').value = u.name;
-            document.getElementById('m-gender').value = u.gender || 'female';
-            document.getElementById('m-age').value = u.age || '';
-            document.getElementById('m-target').value = u.target || '';
+            document.getElementById('m-gender').value = u.gender;
+            document.getElementById('m-target').value = u.target;
             document.getElementById('m-wish').value = u.wish || '';
             document.getElementById('m-mood').value = u.mood || '';
             document.getElementById('manage-modal').classList.remove('hidden');
         }
+
         function closeManageModal() { document.getElementById('manage-modal').classList.add('hidden'); }
         function saveUserManage() {
             const u = users.find(x => x.id == curUid);
             u.name = document.getElementById('m-name').value; u.gender = document.getElementById('m-gender').value;
-            u.age = document.getElementById('m-age').value; u.target = parseFloat(document.getElementById('m-target').value);
+            u.target = parseFloat(document.getElementById('m-target').value);
             u.wish = document.getElementById('m-wish').value; u.mood = document.getElementById('m-mood').value;
             closeManageModal(); sync();
         }
+
         function setLogType(t) { entryType = t; renderEntryForm(); }
+
         function renderEntryForm() {
             const container = document.getElementById('entry-form');
             const btns = { weight: 'tab-weight', food: 'tab-food', sport: 'tab-sport' };
             Object.keys(btns).forEach(k => document.getElementById(btns[k]).className = k === entryType ? "px-6 py-2 rounded-xl font-black text-sm bg-white text-accent shadow-md" : "px-6 py-2 rounded-xl font-black text-sm text-slate-400");
+            
             if(entryType === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl font-bold"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重(kg)" class="bg-slate-50 p-5 rounded-2xl font-bold md:col-span-2"><button onclick="submitEntry()" class="btn-accent p-5 rounded-2xl font-black">记录</button>`;
+                container.innerHTML = `<select id="e-slot" class="bg-slate-50 p-5 rounded-2xl font-bold"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="kg" class="bg-slate-50 p-5 rounded-2xl font-bold md:col-span-2"><button onclick="submitEntry()" class="btn-accent p-5 rounded-2xl font-black">记录</button>`;
             } else {
-                container.innerHTML = `<input type="text" id="e-name" placeholder="内容" class="bg-slate-50 p-5 rounded-2xl font-bold"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 p-5 rounded-2xl font-bold"><select id="e-slot" class="bg-slate-50 p-5 rounded-2xl font-bold">${(entryType==='food'?["早餐","午餐","晚餐","点心"]:["有氧","无氧","拉伸"]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select><button onclick="submitEntry()" class="btn-accent p-5 rounded-2xl font-black">确认</button>`;
+                const opts = entryType === 'food' ? ["早餐","午餐","晚餐","点心"] : ["有氧","无氧","拉伸"];
+                container.innerHTML = `<select id="e-slot" class="bg-slate-50 p-5 rounded-2xl font-bold">${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select><input type="text" id="e-name" placeholder="内容" class="bg-slate-50 p-5 rounded-2xl font-bold"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 p-5 rounded-2xl font-bold"><button onclick="submitEntry()" class="btn-accent p-5 rounded-2xl font-black">确认</button>`;
             }
         }
+
         function submitEntry() {
             const u = users.find(x => x.id == curUid); if(!u) return;
             const date = document.getElementById('global-date').value, slot = document.getElementById('e-slot').value;
             if(entryType === 'weight') {
-                const val = parseFloat(document.getElementById('e-val').value); if(!val) return;
-                u.weights.push({ id: Date.now(), val, slot, date, ts: new Date(date).getTime() });
-                u.weights.sort((a,b) => a.ts - b.ts);
+                const val = parseFloat(document.getElementById('e-val').value);
+                if(val) u.weights.push({ id: Date.now(), val, slot, date, ts: new Date(date).getTime() });
             } else {
                 const name = document.getElementById('e-name').value, cal = parseInt(document.getElementById('e-cal').value);
-                if(!name || !cal) return;
-                u.logs.unshift({ id: Date.now(), type: entryType, name, cal, slot, date });
+                if(name && cal) u.logs.unshift({ id: Date.now(), type: entryType, name, cal, slot, date });
             }
             sync();
         }
+
         function render() {
             const uNav = document.getElementById('user-nav');
             uNav.innerHTML = users.map(u => `<button onclick="curUid=${u.id};sync()" class="w-full flex items-center justify-between p-4 rounded-2xl transition-all ${curUid == u.id ? 'sidebar-active' : 'text-slate-500'}"><span class="font-black">${u.name}</span><i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-4 h-4 opacity-40"></i></button>`).join('');
-            const u = users.find(x => x.id == curUid); if(!u) { renderEntryForm(); return lucide.createIcons(); }
+            
+            const u = users.find(x => x.id == curUid); if(!u) return;
+
             document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-age').innerText = u.age || '--';
             document.getElementById('display-wish').innerText = u.wish || '暂无目标';
             document.getElementById('display-mood').innerText = u.mood || '波澜不惊';
             document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
+            
+            // 渲染兴趣
+            document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => `
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl group">
+                    <div>
+                        <div class="text-sm font-black text-slate-700">【${i.name}】</div>
+                        <div class="text-[10px] text-slate-400 font-bold">持续：${i.dur}</div>
+                    </div>
+                    <button onclick="deleteInterest(${i.id})" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('') || '<div class="text-center text-slate-300 text-xs py-4 italic">点击+添加兴趣</div>';
+
             const curW = u.weights.length > 0 ? u.weights[u.weights.length-1].val : 0;
             const diff = (curW - u.target).toFixed(1);
             document.getElementById('status-tag').innerText = (diff > 0 ? "+" : "") + diff;
-            const percent = Math.min(100, Math.max(10, (Math.abs((u.weights[0]?.val||curW+5) - curW) / (Math.abs((u.weights[0]?.val||curW+5) - u.target) || 1)) * 100));
-            document.getElementById('progress-fill').style.width = percent + '%';
-            document.getElementById('prog-percent').innerText = Math.round(percent) + '%';
+            
             const gDate = document.getElementById('global-date').value;
             const dayLogs = u.logs.filter(l => l.date === gDate);
-            const logTpl = (l) => `<div class="card p-4 flex justify-between items-center"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><i data-lucide="${l.type==='food'?'utensils':'zap'}" class="w-3 h-3"></i></div><div><div class="font-black text-sm">${l.name}</div><div class="text-[9px] text-slate-300 uppercase">${l.slot}</div></div></div><span class="font-black text-sm">${l.cal}kcal</span></div>`;
-            document.getElementById('list-food').innerHTML = dayLogs.filter(l => l.type === 'food').map(logTpl).join('') || '<div class="text-center p-4 text-slate-200 italic text-xs">无记录</div>';
-            document.getElementById('list-sport').innerHTML = dayLogs.filter(l => l.type === 'sport').map(logTpl).join('') || '<div class="text-center p-4 text-slate-200 italic text-xs">无记录</div>';
+            const logTpl = (l) => `
+                <div class="card p-5 flex justify-between items-center group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i data-lucide="${icons[l.slot] || (l.type==='food'?'utensils':'zap')}" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="font-black text-sm">${l.name}</div>
+                            <div class="text-[10px] text-slate-300 font-bold uppercase">${l.slot}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-black text-sm">${l.cal} kcal</span>
+                        <button onclick="deleteLog(${l.id})" class="text-slate-200 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+                    </div>
+                </div>`;
+            
+            document.getElementById('list-food').innerHTML = dayLogs.filter(l => l.type === 'food').map(logTpl).join('') || '<div class="text-slate-200 italic text-sm p-4 text-center">无饮食记录</div>';
+            document.getElementById('list-sport').innerHTML = dayLogs.filter(l => l.type === 'sport').map(logTpl).join('') || '<div class="text-slate-200 italic text-sm p-4 text-center">无运动记录</div>';
+            
             renderEntryForm(); renderChart(u.weights); lucide.createIcons();
         }
+
         function renderChart(ws) {
             const ctx = document.getElementById('weightChart').getContext('2d');
-            const cutoff = Date.now() - activeRange * 86400000;
-            const f = ws.filter(x => x.ts >= cutoff);
             if(chart) chart.destroy();
             const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: f.map(x => x.date.split('-').slice(1).join('/')),
-                    datasets: [{ data: f.map(x=>x.val), borderColor: accent, borderWidth: 4, pointRadius: 0, tension: 0.4, fill: true, backgroundColor: accent + '11' }]
+                    labels: ws.slice(-7).map(x => x.date.split('-').slice(1).join('/')),
+                    datasets: [{ data: ws.slice(-7).map(x=>x.val), borderColor: accent, borderWidth: 5, pointRadius: 0, tension: 0.4, fill: true, backgroundColor: accent + '11' }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { display: false } }, x: { grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
             });
         }
-        function updateRange(r) { activeRange = r; render(); }
         window.onload = sync;
     </script>
 </body>
