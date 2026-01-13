@@ -1,224 +1,245 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- PWA / iOS App 外观 -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="体重本" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="体重本">
 
-  <title>体重本 💗</title>
+<title>体重本 💗</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: #fff7fb;
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-    }
+<style>
+:root{
+  --pink:#ff8fb1;
+  --bg:#fff7fb;
+  --card:#ffffff;
+  --text:#333;
+  --sub:#888;
+}
 
-    .app {
-      padding: 20px;
-      padding-bottom: 90px;
-    }
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans",sans-serif;
+  color:var(--text);
+}
 
-    h1 {
-      font-size: 22px;
-      margin-bottom: 12px;
-    }
+.app{
+  padding:22px;
+  padding-bottom:110px;
+}
 
-    .card {
-      background: #fff;
-      border-radius: 22px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    }
+h1{
+  font-size:26px;
+  margin:6px 0 14px;
+}
 
-    input, select {
-      width: 100%;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid #eee;
-      font-size: 16px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
+.section-title{
+  font-size:18px;
+  margin-bottom:8px;
+}
 
-    button {
-      width: 100%;
-      padding: 14px;
-      border-radius: 999px;
-      background: #ff8fb1;
-      color: #fff;
-      border: none;
-      font-size: 16px;
-    }
+.card{
+  background:var(--card);
+  border-radius:26px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 12px 30px rgba(0,0,0,.08);
+}
 
-    .big {
-      font-size: 36px;
-      font-weight: bold;
-      color: #ff8fb1;
-    }
+input,select{
+  width:100%;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid #eee;
+  font-size:18px;
+  box-sizing:border-box;
+  margin-bottom:12px;
+}
 
-    .tip {
-      font-size: 14px;
-      color: #999;
-      margin-top: 4px;
-    }
+button{
+  width:100%;
+  padding:16px;
+  border-radius:999px;
+  background:var(--pink);
+  color:#fff;
+  border:none;
+  font-size:18px;
+}
 
-    .record {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-    }
+.big{
+  font-size:44px;
+  font-weight:700;
+  color:var(--pink);
+  margin-top:10px;
+}
 
-    .record button {
-      width: auto;
-      padding: 6px 12px;
-      font-size: 12px;
-      background: #eee;
-      color: #666;
-    }
+.tip{
+  font-size:15px;
+  color:var(--sub);
+  margin-top:6px;
+}
 
-    .tabs {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: #fff;
-      border-top: 1px solid #eee;
-    }
+.record{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+}
 
-    .tabs button {
-      flex: 1;
-      background: none;
-      border: none;
-      padding: 12px;
-      font-size: 14px;
-    }
+.record span{
+  font-size:16px;
+}
 
-    .page { display: none; }
-    .page.active { display: block; }
-  </style>
+.record button{
+  width:auto;
+  padding:8px 14px;
+  font-size:14px;
+  background:#f2f2f2;
+  color:#666;
+}
+
+.tabs{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  display:flex;
+  background:#fff;
+  border-top:1px solid #eee;
+}
+
+.tabs button{
+  flex:1;
+  background:none;
+  border:none;
+  padding:14px 0 10px;
+  font-size:15px;
+}
+
+.page{display:none;}
+.page.active{display:block;}
+</style>
 </head>
 
 <body>
 <div class="app">
 
-  <!-- 今日 -->
-  <div class="page active" id="home">
-    <h1>今天 🌷</h1>
-    <div class="card">
-      <select id="who">
-        <option value="me">我</option>
-        <option value="ta">TA</option>
-      </select>
-      <input id="weight" type="number" step="0.1" placeholder="体重 kg" />
-      <input id="note" placeholder="备注（吃多了 / 运动了）" />
-      <button onclick="save()">保存</button>
-      <div class="big" id="today">-- kg</div>
-      <div class="tip" id="date"></div>
-    </div>
-  </div>
+<!-- 今日 -->
+<div class="page active" id="home">
+  <h1>今天也很棒 🌷</h1>
+  <div class="card">
+    <select id="who">
+      <option value="me">我</option>
+      <option value="ta">TA</option>
+    </select>
 
-  <!-- 记录 -->
-  <div class="page" id="listPage">
-    <h1>记录 📖</h1>
-    <div class="card" id="list"></div>
-  </div>
+    <input id="weight" type="number" step="0.1" placeholder="今天的体重 kg">
+    <input id="note" placeholder="备注（吃多了 / 运动了）">
+    <button onclick="save()">保存今天</button>
 
-  <!-- 趋势 -->
-  <div class="page" id="chartPage">
-    <h1>趋势 📈</h1>
-    <div class="card">
-      <canvas id="chart"></canvas>
-    </div>
+    <div class="big" id="today">-- kg</div>
+    <div class="tip" id="date"></div>
   </div>
+</div>
 
-  <!-- 设置 -->
-  <div class="page" id="setting">
-    <h1>设置 ⚙️</h1>
-    <div class="card">
-      <input id="meName" placeholder="我的昵称" />
-      <input id="taName" placeholder="TA 的昵称" />
-      <input id="target" placeholder="目标体重 kg" />
-      <button onclick="saveSetting()">保存设置</button>
-    </div>
+<!-- 记录 -->
+<div class="page" id="listPage">
+  <h1>记录 📖</h1>
+  <div class="card" id="list"></div>
+</div>
+
+<!-- 趋势 -->
+<div class="page" id="chartPage">
+  <h1>趋势 📈</h1>
+  <div class="card">
+    <canvas id="chart"></canvas>
   </div>
+</div>
+
+<!-- 设置 -->
+<div class="page" id="setting">
+  <h1>设置 ⚙️</h1>
+  <div class="card">
+    <input id="meName" placeholder="我的昵称">
+    <input id="taName" placeholder="TA 的昵称">
+    <input id="target" placeholder="目标体重 kg">
+    <button onclick="saveSetting()">保存设置</button>
+  </div>
+</div>
 
 </div>
 
-<!-- 底部导航 -->
+<!-- Tab -->
 <div class="tabs">
-  <button onclick="show('home')">🏠</button>
-  <button onclick="show('listPage')">📖</button>
-  <button onclick="show('chartPage')">📈</button>
-  <button onclick="show('setting')">⚙️</button>
+  <button onclick="show('home')">🏠<br>今天</button>
+  <button onclick="show('listPage')">📖<br>记录</button>
+  <button onclick="show('chartPage')">📈<br>趋势</button>
+  <button onclick="show('setting')">⚙️<br>设置</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const today = new Date().toISOString().slice(0,10);
-const data = JSON.parse(localStorage.getItem("data") || "{}");
-const setting = JSON.parse(localStorage.getItem("setting") || "{}");
+const today=new Date().toISOString().slice(0,10);
+const data=JSON.parse(localStorage.getItem("data")||"{}");
+const setting=JSON.parse(localStorage.getItem("setting")||"{}");
 
 function show(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
   if(id==="chartPage") drawChart();
 }
 
 function save(){
-  const who = document.getElementById("who").value;
-  const w = document.getElementById("weight").value;
-  const note = document.getElementById("note").value;
+  const who=whoEl().value;
+  const w=weightEl().value;
+  const note=noteEl().value;
   if(!w) return;
-
-  data[today] = data[today] || {};
-  data[today][who] = { w, note };
-  localStorage.setItem("data", JSON.stringify(data));
+  data[today]=data[today]||{};
+  data[today][who]={w,note};
+  localStorage.setItem("data",JSON.stringify(data));
   load();
 }
 
 function load(){
-  document.getElementById("date").innerText = today;
-  const t = data[today]?.me?.w;
-  if(t) document.getElementById("today").innerText = t + " kg";
+  dateEl().innerText=today;
+  if(data[today]?.me)
+    todayEl().innerText=data[today].me.w+" kg";
+  renderList();
+}
 
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+function renderList(){
+  listEl().innerHTML="";
   Object.keys(data).sort().reverse().forEach(d=>{
     Object.keys(data[d]).forEach(p=>{
-      const r = data[d][p];
-      const div = document.createElement("div");
+      const r=data[d][p];
+      const div=document.createElement("div");
       div.className="record";
-      div.innerHTML = `<span>${d} ${p} ${r.w}kg ${r.note||""}</span>
-        <button onclick="del('${d}','${p}')">删</button>`;
-      list.appendChild(div);
+      div.innerHTML=`<span>${d} · ${p} · ${r.w}kg ${r.note||""}</span>
+      <button onclick="del('${d}','${p}')">删</button>`;
+      listEl().appendChild(div);
     });
   });
 }
 
 function del(d,p){
   delete data[d][p];
-  localStorage.setItem("data", JSON.stringify(data));
+  localStorage.setItem("data",JSON.stringify(data));
   load();
 }
 
 function saveSetting(){
-  setting.me = document.getElementById("meName").value;
-  setting.ta = document.getElementById("taName").value;
-  setting.target = document.getElementById("target").value;
-  localStorage.setItem("setting", JSON.stringify(setting));
+  setting.me=meName.value;
+  setting.ta=taName.value;
+  setting.target=target.value;
+  localStorage.setItem("setting",JSON.stringify(setting));
 }
 
 function drawChart(){
-  const ctx = document.getElementById("chart");
-  const labels=[], values=[];
+  const ctx=document.getElementById("chart");
+  const labels=[],values=[];
   Object.keys(data).sort().forEach(d=>{
     if(data[d].me){
       labels.push(d);
@@ -231,6 +252,13 @@ function drawChart(){
     options:{responsive:true}
   });
 }
+
+const whoEl=()=>document.getElementById("who");
+const weightEl=()=>document.getElementById("weight");
+const noteEl=()=>document.getElementById("note");
+const todayEl=()=>document.getElementById("today");
+const dateEl=()=>document.getElementById("date");
+const listEl=()=>document.getElementById("list");
 
 load();
 </script>
