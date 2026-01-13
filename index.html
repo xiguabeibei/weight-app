@@ -2,91 +2,59 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>家庭健康记录</title>
 
 <style>
 :root{
- --bg:#f6f7fb;
- --card:#ffffff;
- --text:#222;
- --primary:#ff8fb1;
- --accent:#a78bfa;
+ --bg:#f6f7fb;--card:#fff;--text:#222;
+ --primary:#ff8fb1;--accent:#a78bfa;
 }
 body.dark{
- --bg:#1e1e2f;
- --card:#2b2b3c;
- --text:#f4f4f5;
+ --bg:#1e1e2f;--card:#2b2b3c;--text:#f4f4f5;
 }
 body{
- margin:0;
- font-family:-apple-system,BlinkMacSystemFont,"PingFang SC";
- background:var(--bg);
- color:var(--text);
- display:flex;
- height:100vh;
+ margin:0;display:flex;height:100vh;
+ font-family:-apple-system,"PingFang SC";
+ background:var(--bg);color:var(--text);
 }
 aside{
- width:260px;
- background:var(--card);
- box-shadow:4px 0 20px rgba(0,0,0,.08);
- padding:16px;
- overflow:auto;
+ width:260px;background:var(--card);
+ padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.08);
 }
-aside h3{margin-top:0;}
-aside button, aside select{
- width:100%;
- margin-bottom:8px;
- padding:10px;
- border:none;
- border-radius:12px;
+aside h3{margin-top:0}
+aside button,aside select{
+ width:100%;padding:10px;margin-bottom:8px;
+ border:none;border-radius:12px;
 }
+.member strong{display:block;margin-top:10px}
 .member div{
- padding:6px 10px;
- border-radius:10px;
+ padding:6px 10px;border-radius:10px;
  cursor:pointer;
 }
-.member div:hover{background:#ddd}
-main{
- flex:1;
- padding:20px;
- overflow:auto;
-}
+.member div:hover{background:#eee}
+main{flex:1;padding:20px;overflow:auto}
 .card{
- background:var(--card);
- border-radius:20px;
- padding:16px;
- margin-bottom:16px;
+ background:var(--card);border-radius:20px;
+ padding:16px;margin-bottom:16px;
  box-shadow:0 10px 30px rgba(0,0,0,.1);
 }
-input{
- width:100%;
- padding:12px;
- border-radius:12px;
- border:1px solid #ccc;
- margin-bottom:10px;
+input,textarea{
+ width:100%;padding:12px;margin-bottom:10px;
+ border-radius:12px;border:1px solid #ccc;
 }
 .primary{
+ width:100%;padding:12px;border:none;
+ border-radius:999px;color:#fff;
  background:linear-gradient(135deg,var(--primary),var(--accent));
- color:#fff;
- border:none;
- padding:12px;
- border-radius:999px;
- width:100%;
 }
 canvas{width:100%;height:220px}
-.progress{
- height:14px;
- background:#ddd;
- border-radius:999px;
- overflow:hidden;
-}
+.progress{height:14px;background:#ddd;border-radius:999px}
 .progress div{
- height:100%;
- background:linear-gradient(135deg,#67e8f9,#a78bfa);
+ height:100%;background:linear-gradient(135deg,#67e8f9,#a78bfa);
 }
-.tip{margin-top:10px;color:var(--primary);}
+.tip{color:var(--primary);margin-top:8px}
 </style>
 </head>
 
@@ -105,36 +73,33 @@ canvas{width:100%;height:220px}
 <div id="members"></div>
 </aside>
 
-<main>
-<div id="content"></div>
-</main>
+<main><div id="content"></div></main>
 
 <script>
-let store=JSON.parse(localStorage.getItem("healthFinal")||"{}");
+/* ========= 基础 ========= */
+let store=JSON.parse(localStorage.getItem("healthStore")||"{}");
 let currentUser=null;
 let page="weight";
 let timeType="pm";
 let range=7;
 
-function save(){localStorage.setItem("healthFinal",JSON.stringify(store));}
+function save(){
+ localStorage.setItem("healthStore",JSON.stringify(store));
+}
 
-/* ---------- 主题 ---------- */
+/* ========= 主题 ========= */
 function setTheme(t){
- localStorage.setItem("theme",t);
- applyTheme();
+ localStorage.setItem("theme",t);applyTheme();
 }
 function applyTheme(){
  const t=localStorage.getItem("theme")||"system";
- if(t==="dark")document.body.classList.add("dark");
- else if(t==="light")document.body.classList.remove("dark");
- else{
-  document.body.classList.toggle("dark",
-   window.matchMedia("(prefers-color-scheme: dark)").matches);
- }
+ document.body.classList.toggle("dark",
+  t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches)
+ );
 }
 applyTheme();
 
-/* ---------- 成员 ---------- */
+/* ========= 成员 ========= */
 function renderMembers(){
  members.innerHTML="";
  Object.keys(store).forEach(n=>{
@@ -144,137 +109,155 @@ function renderMembers(){
    <strong>${n}</strong>
    <div onclick="open('${n}','weight')">体重记录</div>
    <div onclick="open('${n}','food')">饮食摄入</div>
-   <div onclick="open('${n}','sport')">运动减脂</div>
-  `;
+   <div onclick="open('${n}','sport')">运动减脂</div>`;
   members.appendChild(d);
  });
 }
 renderMembers();
 
-function open(name,p){
- currentUser=name;
- page=p;
- render();
-}
+function open(name,p){currentUser=name;page=p;render();}
+function openSettings(){page="settings";render();}
 
-function openSettings(){
- page="settings";
- render();
-}
-
-/* ---------- 渲染核心（已修复） ---------- */
+/* ========= 渲染 ========= */
 function render(){
- // ✅ 设置页优先
  if(page==="settings"){
   content.innerHTML=`
    <div class="card">
     <h2>添加成员</h2>
-    <input id="name" placeholder="成员名">
-    <input id="start" placeholder="初始体重">
-    <input id="target" placeholder="目标体重">
-    <button class="primary" onclick="addMember()">保存成员</button>
-   </div>`;
-  return;
+    <input id="n" placeholder="成员名">
+    <input id="s" placeholder="初始体重">
+    <input id="t" placeholder="目标体重">
+    <button class="primary" onclick="addMember()">保存</button>
+   </div>`;return;
  }
-
- // 其他页面才要求已有成员
  if(!currentUser){
-  content.innerHTML="<div class='card'>请先添加成员</div>";
-  return;
+  content.innerHTML="<div class='card'>请先添加成员</div>";return;
  }
-
- const today=new Date().toISOString().slice(0,10);
- const profile=store[currentUser].profile;
+ const p=store[currentUser].profile;
  content.innerHTML=`
  <div class="card">
   <h2>${currentUser}</h2>
-  <div>初始 ${profile.start}kg → 目标 ${profile.target}kg</div>
+  <div>初始 ${p.start}kg → 目标 ${p.target}kg</div>
   <div class="progress"><div style="width:${progress()}%"></div></div>
   <div class="tip">${tip()}</div>
  </div>
- ${page==="weight"?weightUI(today):""}
- ${page==="food"?foodUI(today):""}
- ${page==="sport"?sportUI(today):""}
+ ${page==="weight"?weightUI():""}
+ ${page==="food"?foodUI():""}
+ ${page==="sport"?sportUI():""}
  `;
  if(page==="weight")drawWeight();
 }
 
-/* ---------- 数据 ---------- */
+/* ========= 数据初始化 ========= */
 function ensure(date){
  store[currentUser].records=store[currentUser].records||{};
- store[currentUser].records[date]=store[currentUser].records[date]||{
-  am:{},pm:{},foods:[],foodTotal:0,sport:[],sportTotal:0
- };
+ if(!store[currentUser].records[date]){
+  store[currentUser].records[date]={
+   am:{},pm:{},
+   foods:[],foodTotal:0,
+   sports:[],sportTotal:0
+  };
+ }
 }
 
+/* ========= 成员 ========= */
 function addMember(){
- const n=name.value;
- if(!n)return;
- store[n]={profile:{
-  start:Number(start.value),
-  target:Number(target.value)
- },records:{}};
- save();
- renderMembers();
- open(n,"weight");
+ const name=n.value;
+ if(!name)return;
+ store[name]={profile:{start:+s.value,target:+t.value},records:{}};
+ save();renderMembers();open(name,"weight");
 }
 
-/* ---------- 体重 ---------- */
-function weightUI(date){
+/* ========= 体重 ========= */
+function weightUI(){
+ const d=new Date().toISOString().slice(0,10);
  return `
  <div class="card">
-  <input type="date" id="date" value="${date}">
+  <input type="date" id="date" value="${d}">
   <button onclick="timeType='am'">早</button>
   <button onclick="timeType='pm'">晚</button>
   <input id="w" placeholder="体重 kg">
-  <button class="primary" onclick="saveWeight()">保存</button>
+  <button class="primary" onclick="saveWeight()">保存体重</button>
   <select onchange="range=this.value;drawWeight()">
    <option value="7">7天</option><option value="30">1月</option>
    <option value="90">3月</option><option value="180">半年</option>
    <option value="365">1年</option>
   </select>
-  <canvas id="wc"></canvas>
+  <canvas id="wc" width="300" height="220"></canvas>
  </div>`;
 }
 
 function saveWeight(){
- const d=document.getElementById("date").value;
+ const d=date.value;
  ensure(d);
- store[currentUser].records[d][timeType].weight=Number(w.value);
- save();drawWeight();render();
+ store[currentUser].records[d][timeType].weight=+w.value;
+ save();render();
 }
 
 function drawWeight(){
- const c=wc.getContext("2d");
- c.clearRect(0,0,300,300);
- const rec=Object.entries(store[currentUser].records)
-  .slice(-range)
-  .map(r=>r[1].pm.weight).filter(Boolean);
+ const ctx=wc.getContext("2d");
+ ctx.clearRect(0,0,300,220);
+ const rec=Object.values(store[currentUser].records)
+  .map(r=>r.pm.weight).filter(v=>v);
  if(!rec.length)return;
- c.beginPath();
+ ctx.beginPath();
  rec.forEach((v,i)=>{
-  const x=i*(300/rec.length);
-  const y=220-(v/Math.max(...rec))*180;
-  i?c.lineTo(x,y):c.moveTo(x,y);
+  const x=i*(300/(rec.length-1||1));
+  const y=200-(v/Math.max(...rec))*160;
+  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
  });
- c.strokeStyle="#ff8fb1";
- c.lineWidth=3;
- c.stroke();
+ ctx.strokeStyle="#ff8fb1";ctx.lineWidth=3;ctx.stroke();
 }
 
-/* ---------- 激励 ---------- */
+/* ========= 饮食 ========= */
+function foodUI(){
+ return `
+ <div class="card">
+  <textarea id="food" placeholder="食物名"></textarea>
+  <input id="kcal" placeholder="卡路里">
+  <button class="primary" onclick="addFood()">添加饮食</button>
+ </div>`;
+}
+function addFood(){
+ const d=new Date().toISOString().slice(0,10);
+ ensure(d);
+ store[currentUser].records[d].foods.push({name:food.value,kcal:+kcal.value});
+ store[currentUser].records[d].foodTotal+=+kcal.value;
+ save();render();
+}
+
+/* ========= 运动 ========= */
+function sportUI(){
+ return `
+ <div class="card">
+  <input id="sport" placeholder="运动类型">
+  <input id="burn" placeholder="消耗卡路里">
+  <button class="primary" onclick="addSport()">添加运动</button>
+ </div>`;
+}
+function addSport(){
+ const d=new Date().toISOString().slice(0,10);
+ ensure(d);
+ store[currentUser].records[d].sports.push({name:sport.value,kcal:+burn.value});
+ store[currentUser].records[d].sportTotal+=+burn.value;
+ save();render();
+}
+
+/* ========= 激励 ========= */
 function progress(){
  const p=store[currentUser].profile;
- const last=Object.values(store[currentUser].records).at(-1)?.pm?.weight;
- if(!last)return 0;
+ const rec=Object.values(store[currentUser].records);
+ if(!rec.length)return 0;
+ const last=rec.at(-1).pm.weight;
  return Math.min(100,(p.start-last)/(p.start-p.target)*100);
 }
 function tip(){
  const p=store[currentUser].profile;
- const last=Object.values(store[currentUser].records).at(-1)?.pm?.weight;
- if(!last)return "从今天开始记录吧 🌱";
- const diff=(last-p.target).toFixed(1);
- return diff>0?`距离目标还差 ${diff}kg，加油 💪`:"已达成目标，太棒了 🎉";
+ const rec=Object.values(store[currentUser].records);
+ if(!rec.length)return "从今天开始记录吧 🌱";
+ const last=rec.at(-1).pm.weight;
+ const d=(last-p.target).toFixed(1);
+ return d>0?`距离目标还有 ${d}kg，加油 💪`:"目标达成 🎉";
 }
 </script>
 
