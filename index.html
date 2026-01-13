@@ -24,15 +24,13 @@ body{
  color:var(--text);
 }
 .app{display:flex;height:100vh;}
-
-/* 左侧栏 */
 .sidebar{
  width:280px;
  padding:28px;
  background:linear-gradient(180deg,var(--pink),var(--purple));
  color:#fff;
 }
-.sidebar h1{margin-bottom:16px;font-size:24px;}
+.sidebar h1{font-size:24px;margin-bottom:16px;}
 .sidebar select,
 .sidebar input{
  width:100%;
@@ -52,10 +50,7 @@ body{
  color:#fff;
  font-size:17px;
 }
-
-/* 主区域 */
 .main{flex:1;padding:36px;overflow:auto;}
-
 .card{
  background:var(--card);
  border-radius:32px;
@@ -63,12 +58,7 @@ body{
  margin-bottom:26px;
  box-shadow:0 24px 50px rgba(0,0,0,.15);
 }
-
-h2{
- margin-top:0;
- font-size:22px;
-}
-
+h2{margin-top:0;font-size:22px;}
 input{
  width:100%;
  padding:18px;
@@ -77,7 +67,6 @@ input{
  margin-bottom:16px;
  font-size:18px;
 }
-
 .primary{
  background:linear-gradient(135deg,var(--pink),var(--purple));
  color:#fff;
@@ -87,38 +76,26 @@ input{
  width:100%;
  font-size:18px;
 }
-
 .chart{
- height:300px;
+ height:280px;
  display:flex;
  align-items:flex-end;
  gap:12px;
 }
-
 .bar{
  flex:1;
  background:linear-gradient(180deg,var(--blue),var(--purple));
  border-radius:14px 14px 8px 8px;
  animation:grow .6s ease forwards;
 }
-
-@keyframes grow{
- from{height:0}
- to{height:var(--h)}
-}
-
-.tip{
- font-size:20px;
- color:var(--pink);
- margin-top:12px;
-}
+@keyframes grow{from{height:0}to{height:var(--h)}}
+.tip{font-size:20px;color:var(--pink);}
 </style>
 </head>
 
 <body>
 <div class="app">
 
-<!-- 左侧 -->
 <div class="sidebar">
 <h1>健康小本本</h1>
 
@@ -132,10 +109,10 @@ input{
 <button onclick="show('weight')">⚖️ 体重</button>
 <button onclick="show('food')">🍚 饮食</button>
 <button onclick="show('sport')">🏃 运动</button>
+<button onclick="show('summary')">📊 当日总结</button>
 <button onclick="show('family')">👨‍👩‍👧 家庭</button>
 </div>
 
-<!-- 右侧 -->
 <div class="main">
 
 <div class="card">
@@ -143,6 +120,7 @@ input{
 <input id="date" type="date">
 </div>
 
+<!-- 体重 -->
 <div class="page" id="weight">
 <div class="card">
 <h2>⚖️ 体重记录</h2>
@@ -150,29 +128,44 @@ input{
 <button class="primary" onclick="saveWeight()">保存体重</button>
 <div id="tip" class="tip"></div>
 </div>
-
 <div class="card">
 <h2>最近 7 天体重</h2>
 <div class="chart" id="weightChart"></div>
 </div>
 </div>
 
+<!-- 饮食 -->
 <div class="page" id="food" style="display:none">
 <div class="card">
-<h2>🍚 饮食记录（卡路里）</h2>
-<input id="foodCal" type="number" placeholder="今日摄入 kcal">
+<h2>🍚 饮食记录</h2>
+<input id="foodCal" type="number" placeholder="摄入 kcal">
 <button class="primary" onclick="saveFood()">保存饮食</button>
+</div>
+<div class="card">
+<h2>最近 7 天饮食</h2>
+<div class="chart" id="foodChart"></div>
 </div>
 </div>
 
+<!-- 运动 -->
 <div class="page" id="sport" style="display:none">
 <div class="card">
-<h2>🏃 运动记录（消耗）</h2>
+<h2>🏃 运动记录</h2>
 <input id="sportCal" type="number" placeholder="消耗 kcal">
 <button class="primary" onclick="saveSport()">保存运动</button>
 </div>
+<div class="card">
+<h2>最近 7 天运动</h2>
+<div class="chart" id="sportChart"></div>
+</div>
 </div>
 
+<!-- 当日总结 -->
+<div class="page" id="summary" style="display:none">
+<div class="card" id="summaryCard"></div>
+</div>
+
+<!-- 家庭 -->
 <div class="page" id="family" style="display:none">
 <div class="card" id="familyList">
 <h2>👨‍👩‍👧 家庭总览</h2>
@@ -184,19 +177,17 @@ input{
 
 <script>
 const tips=[
-"今天也是被好运眷顾的一天 ✨",
-"身体在悄悄变好哦 🌷",
-"慢慢来，但一直在向前 🍃",
-"你已经在变更好的路上 💗"
+"今天是一个很吉利的日子 ✨",
+"身体在慢慢积累好运 🌷",
+"你为自己做了一件好事 🍀",
+"平稳就是进步，继续保持 💗"
 ];
 
 const store=JSON.parse(localStorage.getItem("healthStable")||"{}");
 let currentUser="";
 date.value=new Date().toISOString().slice(0,10);
 
-function save(){
- localStorage.setItem("healthStable",JSON.stringify(store));
-}
+function save(){localStorage.setItem("healthStable",JSON.stringify(store));}
 
 function addUser(){
  const n=newUser.value.trim();
@@ -215,19 +206,12 @@ function loadUsers(){
 }
 loadUsers();
 
-function changeUser(){
- currentUser=userSelect.value;
- renderAll();
-}
+function changeUser(){currentUser=userSelect.value;renderAll();}
 
 function ensure(){
  if(!currentUser)return false;
  const d=date.value;
- store[currentUser][d]=store[currentUser][d]||{
-  weight:null,
-  food:0,
-  sport:0
- };
+ store[currentUser][d]=store[currentUser][d]||{weight:null,food:0,sport:0};
  return true;
 }
 
@@ -236,33 +220,50 @@ function saveWeight(){
  store[currentUser][date.value].weight=Number(weightVal.value);
  save();
  tip.innerText=tips[Math.floor(Math.random()*tips.length)];
- renderWeight();
- renderFamily();
+ renderAll();
 }
 
 function saveFood(){
  if(!ensure())return;
  store[currentUser][date.value].food=Number(foodCal.value||0);
- save();
+ save();renderAll();
 }
 
 function saveSport(){
  if(!ensure())return;
  store[currentUser][date.value].sport=Number(sportCal.value||0);
- save();
+ save();renderAll();
+}
+
+function renderBars(target,values){
+ target.innerHTML="";
+ const max=Math.max(...values,1);
+ values.forEach(v=>{
+  const b=document.createElement("div");
+  b.className="bar";
+  b.style.setProperty("--h",(v/max*100)+"%");
+  target.appendChild(b);
+ });
 }
 
 function renderWeight(){
- weightChart.innerHTML="";
  if(!currentUser)return;
  const days=Object.entries(store[currentUser]).slice(-7);
- const max=Math.max(...days.map(e=>e[1].weight||0),1);
- days.forEach(e=>{
-  const b=document.createElement("div");
-  b.className="bar";
-  b.style.setProperty("--h",(e[1].weight/max*100)+"%");
-  weightChart.appendChild(b);
- });
+ renderBars(weightChart,days.map(d=>d[1].weight||0));
+ renderBars(foodChart,days.map(d=>d[1].food||0));
+ renderBars(sportChart,days.map(d=>d[1].sport||0));
+}
+
+function renderSummary(){
+ if(!currentUser)return;
+ const d=store[currentUser][date.value];
+ summaryCard.innerHTML=d?
+ `<h2>📊 当日总结</h2>
+  ⚖️ 体重：${d.weight ?? "--"} kg<br>
+  🍚 饮食：${d.food} kcal<br>
+  🏃 运动：${d.sport} kcal<br><br>
+  🌸 ${tips[Math.floor(Math.random()*tips.length)]}`
+ :"<h2>📊 当日总结</h2>今天还没有记录哦 🌱";
 }
 
 function renderFamily(){
@@ -270,20 +271,22 @@ function renderFamily(){
  Object.keys(store).forEach(n=>{
   const last=Object.values(store[n]).slice(-1)[0];
   familyList.innerHTML+=`
-   <div style="margin-bottom:12px;font-size:18px">
-    ${n}：${last?.weight ?? "--"} kg ｜ 🍚 ${last?.food ?? 0} ｜ 🏃 ${last?.sport ?? 0}
-   </div>`;
+  <div style="font-size:18px;margin-bottom:10px">
+   ${n} ｜ ⚖️ ${last?.weight ?? "--"} ｜ 🍚 ${last?.food ?? 0} ｜ 🏃 ${last?.sport ?? 0}
+  </div>`;
  });
 }
 
 function renderAll(){
  renderWeight();
+ renderSummary();
  renderFamily();
 }
 
 function show(id){
  document.querySelectorAll(".page").forEach(p=>p.style.display="none");
  document.getElementById(id).style.display="block";
+ renderAll();
 }
 </script>
 </body>
