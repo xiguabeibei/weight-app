@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="健康记录">
-<title>健康记录</title>
+<title>健康记录 · iPad</title>
 
 <style>
 :root{
   --pink:#ff6fa5;
   --purple:#9b7cff;
   --blue:#4fd1ff;
-  --bg:linear-gradient(180deg,#fff0f6,#f0f6ff);
-  --card:#ffffffdd;
+  --bg:#f4f6fb;
+  --card:#ffffffee;
   --text:#222;
   --sub:#666;
 }
 
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:linear-gradient(180deg,#0f1115,#1a1d26);
-    --card:#1f2430dd;
+    --bg:#0f1115;
+    --card:#1f2430ee;
     --text:#f2f2f2;
     --sub:#aaa;
   }
@@ -35,83 +35,89 @@ body{
 }
 
 .app{
-  padding:22px;
-  padding-bottom:140px;
+  display:flex;
+  height:100vh;
 }
 
-h1{font-size:28px;margin-bottom:10px;}
-h2{font-size:18px;color:var(--sub);margin-bottom:10px;}
+/* Sidebar */
+.sidebar{
+  width:260px;
+  background:linear-gradient(180deg,var(--pink),var(--purple));
+  color:#fff;
+  padding:30px 20px;
+}
+
+.sidebar h1{
+  font-size:22px;
+  margin-bottom:30px;
+}
+
+.sidebar button{
+  width:100%;
+  margin-bottom:14px;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  background:#ffffff33;
+  color:#fff;
+  font-size:16px;
+}
+
+/* Main */
+.main{
+  flex:1;
+  padding:30px;
+  overflow:auto;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+}
 
 .card{
-  backdrop-filter:blur(20px);
   background:var(--card);
-  border-radius:30px;
-  padding:20px;
-  margin-bottom:22px;
-  box-shadow:0 24px 50px rgba(0,0,0,.15);
-  animation:rise .45s cubic-bezier(.2,.8,.2,1);
+  border-radius:26px;
+  padding:22px;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
+  animation:fade .4s ease;
 }
 
-@keyframes rise{
-  from{opacity:0;transform:translateY(30px)}
+@keyframes fade{
+  from{opacity:0;transform:translateY(20px)}
   to{opacity:1;transform:none}
 }
 
-input{
+h2{margin-top:0}
+input,select{
   width:100%;
-  padding:16px;
-  border-radius:18px;
-  border:1px solid #eee;
-  font-size:16px;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ddd;
   margin-bottom:12px;
+  font-size:16px;
 }
 
-button{
-  width:100%;
-  padding:16px;
-  border-radius:999px;
+button.primary{
   background:linear-gradient(135deg,var(--pink),var(--purple));
-  border:none;
   color:#fff;
-  font-size:17px;
-}
-
-.tabs{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  display:flex;
-  background:#ffffffee;
-  backdrop-filter:blur(20px);
-  border-top:1px solid #ddd;
-}
-
-.tabs button{
-  flex:1;
-  background:none;
   border:none;
-  padding:14px 0 10px;
-  font-size:14px;
-}
-
-.page{display:none;animation:slide .35s ease}
-.page.active{display:block}
-
-@keyframes slide{
-  from{opacity:0;transform:translateX(20px)}
-  to{opacity:1;transform:none}
+  padding:14px;
+  border-radius:999px;
+  font-size:16px;
 }
 
 .chart{
-  height:220px;
+  height:260px;
   display:flex;
   align-items:flex-end;
   gap:10px;
-  padding-top:10px;
 }
 
 .bar{
   flex:1;
-  border-radius:12px 12px 6px 6px;
+  border-radius:10px 10px 6px 6px;
   background:linear-gradient(180deg,var(--blue),var(--purple));
   animation:grow .6s ease forwards;
 }
@@ -121,10 +127,10 @@ button{
   to{height:var(--h)}
 }
 
-.encourage{
-  font-size:18px;
-  color:var(--pink);
-  margin-top:8px;
+.member{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
 }
 </style>
 </head>
@@ -132,77 +138,113 @@ button{
 <body>
 <div class="app">
 
-<div class="page active" id="weightPage">
-<h1>体重记录</h1>
-
-<div class="card">
-<input id="name" placeholder="姓名">
-<input id="date" type="date">
-<input id="weight" type="number" step="0.1" placeholder="体重 kg">
-<button onclick="saveWeight()">保存体重</button>
-<div id="encourage" class="encourage"></div>
+<div class="sidebar">
+  <h1>健康记录</h1>
+  <button onclick="show('weight')">体重记录</button>
+  <button onclick="show('stats')">周 / 月统计</button>
+  <button onclick="show('family')">家庭总览</button>
 </div>
 
-<div class="card">
-<h2>体重趋势</h2>
-<div class="chart" id="chart"></div>
+<div class="main">
+
+<!-- 体重 -->
+<div class="page" id="weight">
+  <div class="grid">
+    <div class="card">
+      <h2>记录体重</h2>
+      <input id="name" placeholder="姓名">
+      <input id="date" type="date">
+      <input id="weightVal" type="number" step="0.1" placeholder="体重 kg">
+      <button class="primary" onclick="saveWeight()">保存</button>
+      <div id="tip"></div>
+    </div>
+    <div class="card">
+      <h2>最近 7 天</h2>
+      <div class="chart" id="weightChart"></div>
+    </div>
+  </div>
 </div>
+
+<!-- 周月 -->
+<div class="page" id="stats" style="display:none">
+  <div class="card">
+    <h2>统计</h2>
+    <select id="range" onchange="renderStats()">
+      <option value="7">最近 7 天</option>
+      <option value="30">最近 30 天</option>
+    </select>
+    <div class="chart" id="statsChart"></div>
+  </div>
+</div>
+
+<!-- 家庭 -->
+<div class="page" id="family" style="display:none">
+  <div class="card">
+    <h2>家庭总览</h2>
+    <div id="familyList"></div>
+  </div>
 </div>
 
 </div>
-
-<div class="tabs">
-<button onclick="show('weightPage')">⚖️<br>体重</button>
 </div>
 
 <script>
-const store=JSON.parse(localStorage.getItem("health")||"{}");
+const store=JSON.parse(localStorage.getItem("healthPad")||"{}");
 date.value=new Date().toISOString().slice(0,10);
 
 function save(){
- localStorage.setItem("health",JSON.stringify(store));
+ localStorage.setItem("healthPad",JSON.stringify(store));
 }
 
 function saveWeight(){
- const n=name.value.trim();
- const d=date.value;
- const w=Number(weight.value);
+ const n=name.value.trim(), d=date.value, w=Number(weightVal.value);
  if(!n||!d||!w)return;
-
- store[n]=store[n]||{weights:{}};
- const prev=Object.entries(store[n].weights).slice(-1)[0];
- store[n].weights[d]=w;
+ store[n]=store[n]||{};
+ store[n][d]=w;
  save();
-
- if(prev){
-  const last=prev[1];
-  encourage.innerText=
-   w<last?"体重在下降，坚持得很好 🌱":
-   w>last?"有一点波动，别焦虑 🍃":
-   "稳住就是胜利 🤍";
- }else{
-  encourage.innerText="第一次记录，加油 ✨";
- }
-
- renderChart(n);
+ renderWeight(n);
+ renderFamily();
 }
 
-function renderChart(n){
- chart.innerHTML="";
- const entries=Object.entries(store[n].weights).sort();
+function renderWeight(n){
+ weightChart.innerHTML="";
+ const entries=Object.entries(store[n]).sort().slice(-7);
  const max=Math.max(...entries.map(e=>e[1]));
+ entries.forEach(e=>{
+  const b=document.createElement("div");
+  b.className="bar";
+  b.style.setProperty("--h",(e[1]/max*100)+"%");
+  weightChart.appendChild(b);
+ });
+}
 
- entries.slice(-7).forEach(e=>{
-  const bar=document.createElement("div");
-  bar.className="bar";
-  bar.style.setProperty("--h",(e[1]/max*100)+"%");
-  chart.appendChild(bar);
+function renderStats(){
+ statsChart.innerHTML="";
+ const days=Number(range.value);
+ Object.values(store).forEach(user=>{
+  Object.entries(user).slice(-days).forEach(e=>{
+   const b=document.createElement("div");
+   b.className="bar";
+   b.style.setProperty("--h",(e[1]/100*100)+"%");
+   statsChart.appendChild(b);
+  });
+ });
+}
+
+function renderFamily(){
+ familyList.innerHTML="";
+ Object.keys(store).forEach(n=>{
+  const last=Object.values(store[n]).slice(-1)[0];
+  const div=document.createElement("div");
+  div.className="member";
+  div.innerHTML=`<strong>${n}</strong><span>${last||"--"} kg</span>`;
+  familyList.appendChild(div);
  });
 }
 
 function show(id){
- document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
- document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+ document.getElementById(id).style.display="block";
 }
 </script>
 </body>
