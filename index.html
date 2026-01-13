@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SmartFit">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3034/3034875.png">
-
-    <title>SmartFit Elite v10</title>
+    <title>SmartFit Elite v11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -17,112 +14,107 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Nunito', 'PingFang SC', 'sans-serif'] }
+                    fontFamily: { sans: ['Nunito', 'PingFang SC', 'sans-serif'] },
+                    colors: {极黑: '#000000'}
                 }
             }
         }
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
-        
         :root { --accent: #f472b6; }
         .theme-female { --accent: #f472b6; }
         .theme-male { --accent: #3b82f6; }
 
-        body { 
-            transition: background-color 0.4s, color 0.4s;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { transition: background-color 0.4s; -webkit-tap-highlight-color: transparent; }
+        /* 极黑模式背景 */
+        .dark { background-color: #000000; color: #ffffff; }
+        .dark aside, .dark main > div > div { background-color: #111111; border-color: #222; }
 
         .btn-accent { background-color: var(--accent); color: white; }
         .text-accent { color: var(--accent); }
         .sidebar-active { background-color: var(--accent); color: white !important; }
         
+        /* 侧滑删除核心样式 */
+        .swipe-container { overflow: hidden; position: relative; touch-action: pan-y; }
+        .swipe-content { position: relative; z-index: 10; transition: transform 0.3s ease; background: inherit; }
+        .delete-btn { 
+            position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+            background: #ef4444; color: white; display: flex; align-items: center;
+            justify-content: center; z-index: 5; border-radius: 0 1.5rem 1.5rem 0;
+            font-weight: 900; font-size: 12px; cursor: pointer;
+        }
+
+        /* 兴趣点阵 */
         @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
-        .dot-active { background-color: var(--accent); width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin: 2px; animation: pulse-dot 2s infinite; }
-        .dot-paused { background-color: #94a3b8; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin: 2px; }
+        .dot-active { background-color: var(--accent); width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin: 1.5px; animation: pulse-dot 2s infinite; }
+        .dot-paused { background-color: #444; width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin: 1.5px; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
-        .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-
-        /* 修复按钮遮挡问题的特定样式 */
-        .tab-container {
-            background-color: #f1f5f9; /* 稍微深一点的灰色，确保在纯白背景下可见 */
-            border: 1px solid #e2e8f0;
-        }
-        .dark .tab-container {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-        }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex h-screen overflow-hidden">
+<body class="bg-slate-50 dark:bg-black text-slate-900 flex h-screen overflow-hidden">
 
-    <aside class="w-64 m-4 mr-0 flex flex-col p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800">
+    <aside class="w-72 m-4 mr-0 flex flex-col p-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-zinc-800">
         <div class="flex items-center gap-3 mb-10 px-2">
             <div class="w-10 h-10 rounded-2xl btn-accent flex items-center justify-center shadow-lg shadow-pink-500/20"><i data-lucide="sparkles"></i></div>
-            <h1 class="font-900 text-xl tracking-tighter">SmartFit</h1>
+            <h1 class="font-900 text-xl tracking-tighter dark:text-white">SmartFit</h1>
         </div>
         
-        <nav id="user-nav" class="flex-1 space-y-3 overflow-y-auto no-scrollbar"></nav>
+        <nav id="user-nav" class="flex-1 space-y-2 overflow-y-auto no-scrollbar"></nav>
 
-        <div class="mt-4 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl flex justify-between">
-            <button onclick="setThemeMode('light')" id="btn-light" class="flex-1 py-2 rounded-xl flex justify-center transition-all"><i data-lucide="sun" class="w-4 h-4"></i></button>
-            <button onclick="setThemeMode('dark')" id="btn-dark" class="flex-1 py-2 rounded-xl flex justify-center transition-all"><i data-lucide="moon" class="w-4 h-4"></i></button>
-            <button onclick="setThemeMode('auto')" id="btn-auto" class="flex-1 py-2 rounded-xl flex justify-center transition-all"><i data-lucide="monitor" class="w-4 h-4"></i></button>
+        <div class="mt-4 p-1.5 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex justify-between">
+            <button onclick="setThemeMode('light')" id="btn-light" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="sun" class="w-4 h-4"></i></button>
+            <button onclick="setThemeMode('dark')" id="btn-dark" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="moon" class="w-4 h-4"></i></button>
+            <button onclick="setThemeMode('auto')" id="btn-auto" class="flex-1 py-2 rounded-xl flex justify-center"><i data-lucide="monitor" class="w-4 h-4"></i></button>
         </div>
 
-        <div class="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-            <button onclick="addUser()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="plus-circle" class="w-4 h-4"></i> 新增</button>
-            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-sm font-bold transition-all"><i data-lucide="user-cog" class="w-4 h-4"></i> 档案</button>
+        <div class="pt-6 mt-4 border-t border-slate-100 dark:border-zinc-800 space-y-2">
+            <button onclick="addUser()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-3 text-sm font-bold"><i data-lucide="plus-circle" class="w-4 h-4"></i> 新增用户</button>
+            <button onclick="openManageModal()" class="w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-3 text-sm font-bold"><i data-lucide="user-cog" class="w-4 h-4"></i> 档案设置</button>
         </div>
     </aside>
 
     <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar">
-        <div class="max-w-5xl mx-auto space-y-6">
+        <div class="max-w-6xl mx-auto space-y-6">
             
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[3rem] p-8 flex flex-col justify-between min-h-[320px] relative overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-                    <div class="relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-[3rem] p-8 flex flex-col justify-between min-h-[340px] shadow-sm border border-slate-100 dark:border-zinc-800">
+                    <div>
                         <div class="flex justify-between items-start">
                             <div>
                                 <div class="flex items-center gap-4 mb-4">
-                                    <h2 id="display-name" class="text-5xl font-900 tracking-tighter text-slate-800 dark:text-white">--</h2>
-                                    <div id="display-gender-icon" class="p-2 rounded-full bg-slate-50 dark:bg-slate-800"></div>
+                                    <h2 id="display-name" class="text-5xl font-900 tracking-tighter dark:text-white">--</h2>
+                                    <div id="display-gender-icon"></div>
                                 </div>
-                                <div class="bg-accent/10 px-4 py-2 rounded-2xl inline-block">
-                                    <p id="display-wish" class="text-sm font-black italic text-accent">--</p>
-                                </div>
+                                <p id="display-wish" class="text-sm font-black italic text-accent opacity-80">--</p>
                             </div>
                             <div class="text-right">
                                 <span id="status-tag" class="text-6xl font-black tracking-tighter">0.0</span>
-                                <p class="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mt-1">KG TO GOAL</p>
+                                <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">KG TO GOAL</p>
                             </div>
                         </div>
                         <div class="mt-8">
-                            <h3 id="quote-title" class="text-2xl font-900 text-slate-800 dark:text-slate-100 mb-1">正在加载...</h3>
-                            <p id="quote-desc" class="text-sm font-bold text-slate-400 dark:text-slate-500">加油，每一滴汗水都有意义。</p>
+                            <h3 id="quote-title" class="text-2xl font-900 dark:text-white mb-1">...</h3>
+                            <p id="quote-desc" class="text-sm font-bold text-slate-400">...</p>
                         </div>
                     </div>
-                    <div id="mood-display" class="mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-sm font-bold italic text-slate-500 dark:text-slate-400">
-                        今日心情: --
-                    </div>
+                    <div id="mood-display" class="mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800 text-sm font-bold italic text-slate-500">今日心情: --</div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 flex flex-col shadow-sm border border-slate-100 dark:border-slate-800">
+                <div class="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-[3rem] p-8 flex flex-col shadow-sm border border-slate-100 dark:border-zinc-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 class="font-900 flex items-center gap-2 dark:text-white"><i data-lucide="target" class="text-orange-500 w-5 h-5"></i> 近日兴趣</h4>
-                        <button onclick="addInterest()" class="btn-accent w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        <h4 class="font-900 flex items-center gap-2 dark:text-white"><i data-lucide="target" class="text-orange-500"></i> 近日兴趣</h4>
+                        <button onclick="addInterest()" class="btn-accent w-8 h-8 rounded-full flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4"></i></button>
                     </div>
-                    <div id="interest-list" class="space-y-4 flex-1 overflow-y-auto no-scrollbar"></div>
+                    <div id="interest-list" class="space-y-4 overflow-y-auto no-scrollbar flex-1 max-h-[220px]"></div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div class="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 shadow-sm border border-slate-100 dark:border-zinc-800">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xs font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Analytic Trend</h3>
-                    <div class="flex gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <h3 class="text-xs font-black text-slate-300 dark:text-zinc-600 uppercase tracking-widest">Analytics</h3>
+                    <div class="flex gap-2 bg-slate-100 dark:bg-zinc-800 p-1.5 rounded-2xl border border-transparent dark:border-zinc-700">
                         <input type="date" id="chart-start" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white outline-none">
                         <input type="date" id="chart-end" onchange="renderChart()" class="text-[10px] font-bold bg-transparent dark:text-white outline-none">
                     </div>
@@ -130,101 +122,95 @@
                 <div class="h-64 w-full"><canvas id="weightChart"></canvas></div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-md border border-slate-100 dark:border-slate-800">
+            <div class="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 shadow-md border border-slate-100 dark:border-zinc-800">
                 <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
-                    <div class="flex items-center gap-2">
-                         <i data-lucide="calendar" class="w-4 h-4 text-accent"></i>
-                         <input type="date" id="global-date" onchange="render()" class="font-black text-accent bg-transparent outline-none">
-                    </div>
-                    <div class="tab-container flex gap-1 p-1.5 rounded-2xl shadow-inner">
+                    <input type="date" id="global-date" onchange="render()" class="font-black text-accent bg-transparent outline-none">
+                    <div class="flex gap-1 p-1.5 bg-slate-100 dark:bg-zinc-800 rounded-2xl">
                         <button onclick="setLogType('weight')" id="tab-weight" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">体重</button>
                         <button onclick="setLogType('food')" id="tab-food" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">饮食</button>
                         <button onclick="setLogType('sport')" id="tab-sport" class="px-6 py-2.5 rounded-xl font-900 text-sm transition-all">运动</button>
                     </div>
                 </div>
-                <div id="entry-form" class="grid grid-cols-1 md:grid-cols-4 gap-6 text-slate-800 dark:text-white"></div>
+                <div id="entry-form" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
-                <div class="space-y-4">
-                    <h4 class="font-900 text-emerald-500 px-4 flex items-center gap-2 uppercase text-xs tracking-widest"><i data-lucide="utensils" class="w-3 h-3"></i> Intake Log</h4>
-                    <div id="list-food" class="space-y-4"></div>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-900 text-blue-500 px-4 flex items-center gap-2 uppercase text-xs tracking-widest"><i data-lucide="zap" class="w-3 h-3"></i> Burn Log</h4>
-                    <div id="list-sport" class="space-y-4"></div>
-                </div>
+                <div id="list-food" class="space-y-4"></div>
+                <div id="list-sport" class="space-y-4"></div>
             </div>
         </div>
     </main>
 
-    <div id="manage-modal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-6">
-        <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-10 w-full max-w-2xl shadow-2xl border border-white/5">
+    <div id="manage-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 w-full max-w-2xl border border-white/5">
             <h2 class="text-3xl font-900 mb-8 dark:text-white">Persona Profile</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">姓名</label><input type="text" id="m-name" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">性别</label><select id="m-gender" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"><option value="female">女生</option><option value="male">男生</option></select></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">目标体重 kg</label><input type="number" id="m-target" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-2">愿望</label><input type="text" id="m-wish" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white outline-none"></div>
-                <div class="space-y-1 md:col-span-2"><label class="text-[10px] font-bold text-slate-400 ml-2">今日心情</label><textarea id="m-mood" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold dark:text-white h-24 outline-none"></textarea></div>
+                <input type="text" id="m-name" placeholder="姓名" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none">
+                <select id="m-gender" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none"><option value="female">女生</option><option value="male">男生</option></select>
+                <input type="number" id="m-target" placeholder="目标体重" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none">
+                <input type="text" id="m-wish" placeholder="愿望" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none">
+                <textarea id="m-mood" placeholder="今日心情..." class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white h-24 md:col-span-2 outline-none"></textarea>
             </div>
             <div class="flex gap-4 mt-10">
                 <button onclick="closeManageModal()" class="flex-1 font-black text-slate-400">取消</button>
-                <button onclick="saveUserManage()" class="flex-1 p-5 btn-accent rounded-3xl font-black shadow-lg shadow-pink-500/20">保存设置</button>
+                <button onclick="saveUserManage()" class="flex-1 p-5 btn-accent rounded-3xl font-black shadow-lg">保存</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 数据持久化和状态管理
-        let users = JSON.parse(localStorage.getItem('sf_v10') || '[]');
-        let curUid = localStorage.getItem('sf_uid_v10') || null;
+        let users = JSON.parse(localStorage.getItem('sf_v11') || '[]');
+        let curUid = localStorage.getItem('sf_uid_v11') || null;
         let themeMode = localStorage.getItem('sf_theme') || 'auto';
         let entryType = 'weight', chart = null;
 
-        const todayStr = new Date().toISOString().split('T')[0];
-        document.getElementById('global-date').value = todayStr;
-        document.getElementById('chart-end').value = todayStr;
+        // 初始化日期
+        document.getElementById('global-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('chart-end').value = new Date().toISOString().split('T')[0];
         document.getElementById('chart-start').value = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
 
-        function setThemeMode(m) {
-            themeMode = m;
-            localStorage.setItem('sf_theme', m);
-            applyThemeMode();
+        // 侧滑逻辑封装
+        function setupSwipe(containerSelector) {
+            let startX = 0;
+            document.querySelectorAll(containerSelector).forEach(el => {
+                const content = el.querySelector('.swipe-content');
+                el.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+                el.addEventListener('touchmove', e => {
+                    let moveX = e.touches[0].clientX - startX;
+                    if (moveX < 0 && moveX > -100) content.style.transform = `translateX(${moveX}px)`;
+                });
+                el.addEventListener('touchend', e => {
+                    let endX = e.changedTouches[0].clientX - startX;
+                    content.style.transform = endX < -50 ? `translateX(-80px)` : `translateX(0)`;
+                });
+            });
         }
+
+        function setThemeMode(m) { themeMode = m; localStorage.setItem('sf_theme', m); applyThemeMode(); }
 
         function applyThemeMode() {
             const isDark = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', isDark);
-            
-            ['light', 'dark', 'auto'].forEach(id => {
-                const btn = document.getElementById('btn-' + id);
-                btn.className = themeMode === id ? "flex-1 py-2 rounded-xl flex justify-center bg-white dark:bg-slate-700 text-accent shadow-sm" : "flex-1 py-2 rounded-xl flex justify-center text-slate-400";
-            });
             if(chart) renderChart();
         }
 
         function sync() {
-            localStorage.setItem('sf_v10', JSON.stringify(users));
-            if(curUid) localStorage.setItem('sf_uid_v10', curUid);
+            localStorage.setItem('sf_v11', JSON.stringify(users));
+            if(curUid) localStorage.setItem('sf_uid_v11', curUid);
             applyThemeMode();
-            const u = users.find(x => x.id == curUid);
-            document.body.className = `bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex h-screen overflow-hidden ${u?.gender === 'male' ? 'theme-male' : 'theme-female'}`;
             render();
         }
 
         function addUser() {
             const name = prompt("姓名:"); if(!name) return;
             const u = { id: Date.now(), name, target: 60, gender: 'female', weights: [], logs: [], interests: [] };
-            users.push(u); curUid = u.id; sync(); openManageModal();
+            users.push(u); curUid = u.id; sync();
         }
 
-        function addInterest() {
-            const u = users.find(x => x.id == curUid); if(!u) return;
-            const name = prompt("兴趣名称:");
-            if(name) {
-                if(!u.interests) u.interests = [];
-                u.interests.push({ id: Date.now(), name, start: Date.now(), status: 'active' });
+        function deleteUser(uid) {
+            if(confirm('确定删除该用户及其所有数据吗？')) {
+                users = users.filter(u => u.id !== uid);
+                if(curUid == uid) curUid = users[0]?.id || null;
                 sync();
             }
         }
@@ -236,21 +222,124 @@
             sync();
         }
 
-        function deleteInterest(id) {
-            const u = users.find(x => x.id == curUid);
-            u.interests = u.interests.filter(i => i.id !== id);
-            sync();
+        function addInterest() {
+            const u = users.find(x => x.id == curUid); if(!u) return;
+            const name = prompt("兴趣名称:");
+            if(name) { u.interests.push({ id: Date.now(), name, start: Date.now(), status: 'active' }); sync(); }
         }
 
-        function deleteLog(id, type) {
+        function deleteItem(id, listType) {
             const u = users.find(x => x.id == curUid);
-            if(type === 'weight') u.weights = u.weights.filter(w => w.id !== id);
+            if(listType === 'interest') u.interests = u.interests.filter(i => i.id !== id);
+            else if(listType === 'weight') u.weights = u.weights.filter(w => w.id !== id);
             else u.logs = u.logs.filter(l => l.id !== id);
             sync();
         }
 
-        function openManageModal() {
+        function render() {
+            const uNav = document.getElementById('user-nav');
+            uNav.innerHTML = users.map(u => `
+                <div class="swipe-container group">
+                    <div class="delete-btn" onclick="deleteUser(${u.id})">删除</div>
+                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-4 rounded-2xl flex items-center justify-between cursor-pointer ${curUid == u.id ? 'sidebar-active shadow-lg shadow-pink-500/10' : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-50 dark:hover:bg-zinc-800'}">
+                        <span class="font-black">${u.name}</span>
+                        <i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-4 h-4 opacity-40"></i>
+                    </div>
+                </div>`).join('');
+            
             const u = users.find(x => x.id == curUid); if(!u) return;
+            document.getElementById('display-name').innerText = u.name;
+            document.getElementById('display-wish').innerText = u.wish || 'STAY DISCIPLINED';
+            document.getElementById('mood-display').innerText = `今日心情: ${u.mood || '暂无记录'}`;
+            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
+            
+            // 渲染兴趣列表 (侧滑删除)
+            document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
+                const active = i.status === 'active';
+                const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
+                return `
+                <div class="swipe-container">
+                    <div class="delete-btn" onclick="deleteItem(${i.id}, 'interest')">删除</div>
+                    <div class="swipe-content p-4 rounded-2xl ${active ? 'bg-slate-50 dark:bg-zinc-800' : 'opacity-50'}">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-900 dark:text-white">${i.name}</span>
+                            <button onclick="toggleInterest(${i.id})"><i data-lucide="${active?'pause-circle':'play-circle'}" class="w-4 h-4 text-accent"></i></button>
+                        </div>
+                        <div class="flex flex-wrap">${Array.from({length: Math.min(days, 20)}).map(() => `<span class="${active ? 'dot-active' : 'dot-paused'}"></span>`).join('')}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // 渲染饮食/运动 (侧滑删除)
+            const gDate = document.getElementById('global-date').value;
+            const logs = u.logs.filter(l => l.date === gDate);
+            const renderLog = (l, color) => `
+                <div class="swipe-container">
+                    <div class="delete-btn" onclick="deleteItem(${l.id}, 'log')">删除</div>
+                    <div class="swipe-content p-4 rounded-3xl bg-${color}-500/5 border border-${color}-500/10 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center text-${color}-500"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                            <div><div class="font-900 text-sm dark:text-white">${l.name}</div><div class="text-[9px] text-slate-400 uppercase">${l.slot}</div></div>
+                        </div>
+                        <span class="font-900 text-sm dark:text-white">${l.cal} kcal</span>
+                    </div>
+                </div>`;
+            
+            document.getElementById('list-food').innerHTML = logs.filter(l => l.type === 'food').map(l => renderLog(l, 'emerald')).join('');
+            document.getElementById('list-sport').innerHTML = logs.filter(l => l.type === 'sport').map(l => renderLog(l, 'blue')).join('');
+
+            // 计算Gap与激励语
+            const curW = u.weights.length > 0 ? [...u.weights].sort((a,b)=>a.ts-b.ts)[u.weights.length-1].val : u.target;
+            const diff = (curW - u.target).toFixed(1);
+            document.getElementById('status-tag').innerText = (diff > 0 ? "+" : "") + diff;
+            document.getElementById('status-tag').className = `text-6xl font-black tracking-tighter ${diff <= 0 ? 'text-emerald-500' : 'dark:text-white'}`;
+            
+            const quotes = diff > 5 ? ["千里之行", "蜕变的开始"] : diff > 0 ? ["最后关头", "你比想象中更强大"] : ["巅峰状态", "散发着自律的光芒"];
+            document.getElementById('quote-title').innerText = quotes[0];
+            document.getElementById('quote-desc').innerText = quotes[1];
+
+            setupSwipe('.swipe-container');
+            renderEntryForm(); renderChart(); lucide.createIcons();
+        }
+
+        function setLogType(t) { entryType = t; renderEntryForm(); }
+        function renderEntryForm() {
+            const container = document.getElementById('entry-form');
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => btn.className = btn.id === 'tab-'+entryType ? "px-6 py-2.5 rounded-xl font-900 text-sm bg-accent text-white shadow-lg" : "px-6 py-2.5 rounded-xl font-900 text-sm text-slate-400");
+            if(entryType === 'weight') container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重 kg" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold md:col-span-2 dark:text-white outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900">记录</button>`;
+            else container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white"><option value="早餐">早餐</option><option value="午餐">午餐</option></select><input type="text" id="e-name" placeholder="内容" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 dark:bg-zinc-800 p-4 rounded-2xl font-bold dark:text-white outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900">添加</button>`;
+        }
+
+        function submitEntry() {
+            const u = users.find(x => x.id == curUid);
+            const date = document.getElementById('global-date').value;
+            if(entryType === 'weight') u.weights.push({ id: Date.now(), val: parseFloat(document.getElementById('e-val').value), slot: document.getElementById('e-slot').value, date, ts: new Date(date).getTime() });
+            else u.logs.unshift({ id: Date.now(), type: entryType, name: document.getElementById('e-name').value, cal: parseInt(document.getElementById('e-cal').value), slot: document.getElementById('e-slot').value, date });
+            sync();
+        }
+
+        function renderChart() {
+            const u = users.find(x => x.id == curUid); if(!u) return;
+            const data = u.weights.sort((a,b)=>a.ts-b.ts);
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            if(chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(x => x.date.split('-').slice(1).join('/')),
+                    datasets: [{ 
+                        data: data.map(x=>x.val), 
+                        borderColor: getComputedStyle(document.body).getPropertyValue('--accent'), 
+                        borderWidth: 5, tension: 0.4, fill: true, pointRadius: 0,
+                        backgroundColor: 'rgba(244, 114, 182, 0.1)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#666' } } } }
+            });
+        }
+
+        function openManageModal() {
+            const u = users.find(x => x.id == curUid);
             document.getElementById('m-name').value = u.name;
             document.getElementById('m-gender').value = u.gender;
             document.getElementById('m-target').value = u.target;
@@ -258,166 +347,17 @@
             document.getElementById('m-mood').value = u.mood || '';
             document.getElementById('manage-modal').classList.remove('hidden');
         }
-
         function closeManageModal() { document.getElementById('manage-modal').classList.add('hidden'); }
         function saveUserManage() {
             const u = users.find(x => x.id == curUid);
-            u.name = document.getElementById('m-name').value; 
+            u.name = document.getElementById('m-name').value;
             u.gender = document.getElementById('m-gender').value;
             u.target = parseFloat(document.getElementById('m-target').value);
-            u.wish = document.getElementById('m-wish').value; 
+            u.wish = document.getElementById('m-wish').value;
             u.mood = document.getElementById('m-mood').value;
             closeManageModal(); sync();
         }
 
-        function setLogType(t) { entryType = t; renderEntryForm(); }
-
-        function renderEntryForm() {
-            const container = document.getElementById('entry-form');
-            const btns = { weight: 'tab-weight', food: 'tab-food', sport: 'tab-sport' };
-            Object.keys(btns).forEach(k => {
-                const el = document.getElementById(btns[k]);
-                el.className = k === entryType ? "px-6 py-2 rounded-xl font-900 text-sm bg-accent text-white shadow-lg shadow-pink-500/20 scale-105 transform transition-all" : "px-6 py-2 rounded-xl font-900 text-sm text-slate-400 dark:text-slate-500 hover:text-slate-600";
-            });
-            if(entryType === 'weight') {
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><option value="morning">晨间</option><option value="evening">晚间</option></select><input type="number" id="e-val" step="0.1" placeholder="体重 kg" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold md:col-span-2 border border-slate-100 dark:border-slate-700 outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">保存记录</button>`;
-            } else {
-                const opts = entryType === 'food' ? ["早餐","午餐","晚餐","点心"] : ["有氧","无氧","拉伸"];
-                container.innerHTML = `<select id="e-slot" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none">${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select><input type="text" id="e-name" placeholder="内容" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><input type="number" id="e-cal" placeholder="Kcal" class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl font-bold border border-slate-100 dark:border-slate-700 outline-none"><button onclick="submitEntry()" class="btn-accent p-4 rounded-2xl font-900 shadow-md">确认添加</button>`;
-            }
-        }
-
-        function submitEntry() {
-            const u = users.find(x => x.id == curUid); if(!u) return;
-            const date = document.getElementById('global-date').value, slot = document.getElementById('e-slot').value;
-            if(entryType === 'weight') {
-                const val = parseFloat(document.getElementById('e-val').value);
-                if(val) u.weights.push({ id: Date.now(), val, slot, date, ts: new Date(date).getTime() });
-            } else {
-                const name = document.getElementById('e-name').value, cal = parseInt(document.getElementById('e-cal').value);
-                if(name && cal) u.logs.unshift({ id: Date.now(), type: entryType, name, cal, slot, date });
-            }
-            sync();
-        }
-
-        function updateQuotes(diff) {
-            const title = document.getElementById('quote-title');
-            const desc = document.getElementById('quote-desc');
-            if (diff > 5) {
-                title.innerText = "千里之行，始于足下";
-                desc.innerText = "虽然现在离目标还有点距离，但每一次记录都是蜕变的开始！";
-            } else if (diff > 2) {
-                title.innerText = "渐入佳境，状态极佳";
-                desc.innerText = "身体已经感受到了变化，坚持下去，终点就在眼前！";
-            } else if (diff > 0) {
-                title.innerText = "最后关头，全力以赴";
-                desc.innerText = "就剩最后这么一点点了，你比想象中更强大！";
-            } else {
-                title.innerText = "巅峰状态，你做到了";
-                desc.innerText = "完美达标！现在的你，散发着自律带来的光芒。";
-            }
-        }
-
-        function render() {
-            const uNav = document.getElementById('user-nav');
-            uNav.innerHTML = users.map(u => `<button onclick="curUid=${u.id};sync()" class="w-full flex items-center justify-between p-4 rounded-2xl transition-all ${curUid == u.id ? 'sidebar-active shadow-lg shadow-pink-500/10' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}"><span class="font-black">${u.name}</span><i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-4 h-4 opacity-40"></i></button>`).join('');
-            
-            const u = users.find(x => x.id == curUid); if(!u) return;
-            document.getElementById('display-name').innerText = u.name;
-            document.getElementById('display-wish').innerText = u.wish || '请输入你的减重愿望';
-            document.getElementById('mood-display').innerText = `今日心情: ${u.mood || '暂未记录'}`;
-            document.getElementById('display-gender-icon').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
-            
-            document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => {
-                const days = Math.floor((Date.now() - i.start) / 86400000) + 1;
-                const active = i.status === 'active';
-                return `
-                <div class="p-5 rounded-3xl ${active ? 'bg-slate-50 dark:bg-slate-800' : 'bg-slate-100/50 dark:bg-slate-800/30'} group border border-transparent dark:border-slate-700/50">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <div class="text-sm font-900 ${active ? 'text-slate-800 dark:text-white' : 'text-slate-400'}">【${i.name}】</div>
-                            <div class="text-[9px] font-black uppercase tracking-widest mt-1 text-slate-400">${active ? '已坚持 ' + days + ' 天' : '已暂停'}</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="toggleInterest(${i.id})">${active ? '<i data-lucide="pause-circle" class="w-5 h-5 text-slate-300"></i>' : '<i data-lucide="play-circle" class="w-5 h-5 text-accent"></i>'}</button>
-                            <button onclick="deleteInterest(${i.id})" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap">${Array.from({length: Math.min(days, 30)}).map(() => `<span class="${active ? 'dot-active' : 'dot-paused'}"></span>`).join('')}</div>
-                </div>`;
-            }).join('') || '<p class="text-center py-10 text-[10px] font-bold text-slate-300 italic">No Interests Yet</p>';
-
-            const sortedWeights = [...u.weights].sort((a,b)=>a.ts-b.ts);
-            const curW = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length-1].val : u.target;
-            const diff = (curW - u.target).toFixed(1);
-            const statusEl = document.getElementById('status-tag');
-            statusEl.innerText = (diff > 0 ? "+" : "") + diff;
-            statusEl.className = `text-6xl font-black tracking-tighter ${diff <= 0 ? 'text-emerald-500' : 'text-slate-800 dark:text-white'}`;
-            
-            updateQuotes(diff);
-
-            const gDate = document.getElementById('global-date').value;
-            const logs = u.logs.filter(l => l.date === gDate);
-            const iconsMap = { "早餐":"coffee","午餐":"utensils","晚餐":"moon","点心":"cookie","有氧":"timer","无氧":"dumbbell","拉伸":"accessibility" };
-            
-            const tpl = (l, color) => `
-                <div class="p-4 rounded-3xl bg-${color}-500/5 border border-${color}-500/10 flex justify-between items-center group">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-${color}-500">
-                            <i data-lucide="${iconsMap[l.slot] || (l.type==='food'?'utensils':'zap')}" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <div class="font-900 text-sm dark:text-slate-100">${l.name}</div>
-                            <div class="text-[9px] font-bold text-slate-400 uppercase">${l.slot}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-900 text-sm dark:text-slate-200">${l.cal} kcal</span>
-                        <button onclick="deleteLog(${l.id}, 'log')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
-                    </div>
-                </div>`;
-            
-            document.getElementById('list-food').innerHTML = logs.filter(l => l.type === 'food').map(l => tpl(l, 'emerald')).join('') || '<div class="p-6 text-center text-[10px] font-bold text-slate-300 uppercase italic">Empty</div>';
-            document.getElementById('list-sport').innerHTML = logs.filter(l => l.type === 'sport').map(l => tpl(l, 'blue')).join('') || '<div class="p-6 text-center text-[10px] font-bold text-slate-300 uppercase italic">Empty</div>';
-            
-            renderEntryForm(); renderChart(); lucide.createIcons();
-        }
-
-        function renderChart() {
-            const u = users.find(x => x.id == curUid); if(!u) return;
-            const start = new Date(document.getElementById('chart-start').value).getTime();
-            const end = new Date(document.getElementById('chart-end').value).getTime();
-            const data = u.weights.filter(w => w.ts >= start && w.ts <= end).sort((a,b)=>a.ts-b.ts);
-            const ctx = document.getElementById('weightChart').getContext('2d');
-            if(chart) chart.destroy();
-            const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-            const isDark = document.documentElement.classList.contains('dark');
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(x => x.date.split('-').slice(1).join('/')),
-                    datasets: [{ 
-                        data: data.map(x=>x.val), 
-                        borderColor: accent, borderWidth: 6, pointRadius: 0, pointHitRadius: 30, tension: 0.4, fill: true,
-                        backgroundColor: (context) => {
-                            const g = ctx.createLinearGradient(0, 0, 0, 300);
-                            g.addColorStop(0, accent + '33'); g.addColorStop(1, 'transparent'); return g;
-                        }
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: isDark ? '#1e293b' : '#0f172a' } },
-                    scales: { 
-                        y: { display: false }, 
-                        x: { grid: { display: false }, ticks: { color: isDark ? '#475569' : '#cbd5e1', font: { weight: 'bold', size: 10 } } } 
-                    }
-                }
-            });
-        }
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(themeMode === 'auto') applyThemeMode(); });
         window.onload = () => { applyThemeMode(); sync(); };
     </script>
 </body>
