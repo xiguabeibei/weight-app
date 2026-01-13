@@ -5,15 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="体重本">
 
-<title>体重本 💗</title>
+<title>体重本</title>
 
 <style>
 :root{
   --pink:#ff8fb1;
-  --bg:#fff7fb;
+  --bg:#f6f7fb;
   --card:#ffffff;
   --text:#222;
   --sub:#777;
@@ -21,8 +20,8 @@
 
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#0f0f12;
-    --card:#1c1c22;
+    --bg:#0f1115;
+    --card:#1c1f26;
     --text:#f2f2f2;
     --sub:#aaa;
   }
@@ -36,71 +35,66 @@ body{
 }
 
 .app{
-  padding:22px;
-  padding-bottom:130px;
+  padding:20px;
+  padding-bottom:120px;
 }
 
-h1{
-  font-size:28px;
-  margin:6px 0 14px;
-}
+h1{font-size:26px;margin:4px 0 14px;}
+h2{font-size:18px;margin:0 0 8px;color:var(--sub);}
 
 .card{
   background:var(--card);
-  border-radius:28px;
-  padding:22px;
-  margin-bottom:20px;
-  box-shadow:0 12px 30px rgba(0,0,0,.12);
+  border-radius:24px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  animation:fadeUp .3s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:.6;transform:translateY(10px)}
+  to{opacity:1;transform:none}
 }
 
 input,select{
   width:100%;
-  padding:18px;
-  border-radius:20px;
+  padding:16px;
+  border-radius:18px;
   border:1px solid #eee;
-  font-size:18px;
-  margin-bottom:14px;
+  font-size:17px;
+  margin-bottom:12px;
   box-sizing:border-box;
-  background:transparent;
-  color:var(--text);
 }
 
 button{
   width:100%;
-  padding:18px;
+  padding:16px;
   border-radius:999px;
   background:var(--pink);
   color:#fff;
   border:none;
-  font-size:18px;
+  font-size:17px;
 }
 
 .big{
-  font-size:48px;
+  font-size:46px;
   font-weight:800;
   color:var(--pink);
-  margin-top:12px;
 }
 
-.tip{
-  font-size:16px;
-  color:var(--sub);
-  margin-top:6px;
-}
-
-.record{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:14px;
-}
-
-.record button{
-  width:auto;
-  padding:8px 16px;
+.user-chip{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  background:#eee;
   font-size:14px;
-  background:#4442;
-  color:var(--sub);
+  margin-right:8px;
+  cursor:pointer;
+}
+
+.user-chip.active{
+  background:var(--pink);
+  color:#fff;
 }
 
 .tabs{
@@ -110,61 +104,41 @@ button{
   right:0;
   display:flex;
   background:var(--card);
-  border-top:1px solid #eee;
+  border-top:1px solid #ddd;
 }
 
 .tabs button{
   flex:1;
-  border:none;
   background:none;
-  padding:18px 0 14px;
-  font-size:16px;
+  border:none;
+  padding:16px 0 12px;
+  font-size:15px;
 }
 
-.page{
-  display:none;
-  animation:fade .25s ease;
-}
+.page{display:none;}
 .page.active{display:block;}
-
-@keyframes fade{
-  from{opacity:.6;transform:translateY(10px)}
-  to{opacity:1;transform:none}
-}
-
-.streak{
-  font-size:20px;
-  color:var(--pink);
-  animation:pop .4s ease;
-}
-
-@keyframes pop{
-  from{transform:scale(.8);opacity:.5}
-  to{transform:scale(1);opacity:1}
-}
 </style>
 </head>
 
 <body>
 <div class="app">
 
+<!-- 用户选择 -->
+<div class="card">
+  <h2>当前使用者</h2>
+  <div id="users"></div>
+  <input id="newUser" placeholder="添加家人名字">
+  <button onclick="addUser()">添加用户</button>
+</div>
+
 <!-- 今日 -->
 <div class="page active" id="home">
-  <h1 id="quote">今天也要温柔一点 🌷</h1>
-
+  <h1 id="hello">今天 🌷</h1>
   <div class="card">
-    <select id="who">
-      <option value="me">我</option>
-      <option value="ta">TA</option>
-    </select>
-
     <input id="weight" type="number" step="0.1" placeholder="今天的体重 kg">
-    <input id="note" placeholder="备注（吃多了 / 运动了）">
-    <button onclick="save()">保存今天</button>
-
+    <button onclick="save()">保存记录</button>
     <div class="big" id="today">-- kg</div>
-    <div class="tip" id="date"></div>
-    <div class="streak" id="streak"></div>
+    <div id="streak"></div>
   </div>
 </div>
 
@@ -174,95 +148,103 @@ button{
   <div class="card" id="list"></div>
 </div>
 
-<!-- 设置 -->
-<div class="page" id="setting">
-  <h1>设置 ⚙️</h1>
-  <div class="card">
-    <div class="tip">深色模式跟随系统</div>
-  </div>
-</div>
-
 </div>
 
 <div class="tabs">
   <button onclick="show('home')">🏠<br>今天</button>
   <button onclick="show('listPage')">📖<br>记录</button>
-  <button onclick="show('setting')">⚙️<br>设置</button>
 </div>
 
 <script>
-const today=new Date().toISOString().slice(0,10);
-const data=JSON.parse(localStorage.getItem("data")||"{}");
+const store=JSON.parse(localStorage.getItem("store")||"{}");
+store.users=store.users||{};
+let current=localStorage.getItem("currentUser")||null;
 
-const quotes=[
- "慢慢来，你已经很好了 💗",
- "不是退步，是身体在适应 🌱",
- "今天的你也在努力 ✨",
- "每一条记录都算数 📖",
- "温柔对待自己 🧸"
-];
+const today=()=>new Date().toISOString().slice(0,10);
+
+function saveStore(){
+ localStorage.setItem("store",JSON.stringify(store));
+ localStorage.setItem("currentUser",current);
+}
+
+function addUser(){
+ const name=newUser.value.trim();
+ if(!name||store.users[name]) return;
+ store.users[name]={records:{}};
+ current=name;
+ newUser.value="";
+ saveStore();
+ render();
+}
+
+function switchUser(name){
+ current=name;
+ saveStore();
+ render();
+}
+
+function save(){
+ if(!current) return;
+ const w=weight.value;
+ if(!w) return;
+ store.users[current].records[today()]={w};
+ weight.value="";
+ saveStore();
+ render();
+}
+
+function calcStreak(records){
+ let s=0,d=new Date();
+ while(true){
+  const k=d.toISOString().slice(0,10);
+  if(records[k]){s++;d.setDate(d.getDate()-1);}
+  else break;
+ }
+ return s;
+}
+
+function render(){
+ users.innerHTML="";
+ Object.keys(store.users).forEach(u=>{
+  const span=document.createElement("span");
+  span.className="user-chip"+(u===current?" active":"");
+  span.innerText=u;
+  span.onclick=()=>switchUser(u);
+  users.appendChild(span);
+ });
+
+ if(!current) return;
+
+ hello.innerText=`${current}，今天也要温柔 🌷`;
+
+ const rec=store.users[current].records;
+ todayEl.innerText=rec[today()]?rec[today()].w+" kg":"-- kg";
+
+ const s=calcStreak(rec);
+ streak.innerText=s>1?`🔥 连续记录 ${s} 天`:"";
+
+ list.innerHTML="";
+ Object.keys(rec).sort().reverse().forEach(d=>{
+  const div=document.createElement("div");
+  div.innerText=`${d} · ${rec[d].w} kg`;
+  list.appendChild(div);
+ });
+}
 
 function show(id){
  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 }
 
-function save(){
- const w=weight.value;
- if(!w) return;
- data[today]=data[today]||{};
- data[today].me={w,note:note.value};
- localStorage.setItem("data",JSON.stringify(data));
- load();
-}
-
-function load(){
- date.innerText=today;
- if(data[today]) todayEl.innerText=data[today].me.w+" kg";
- quote.innerText=quotes[new Date().getDate()%quotes.length];
- calcStreak();
- renderList();
-}
-
-function calcStreak(){
- let s=0;
- let d=new Date();
- while(true){
-  const key=d.toISOString().slice(0,10);
-  if(data[key]){s++; d.setDate(d.getDate()-1);}
-  else break;
- }
- streak.innerText=s>1?`🔥 连续记录 ${s} 天`:"";
-}
-
-function renderList(){
- list.innerHTML="";
- Object.keys(data).sort().reverse().forEach(d=>{
-  const r=data[d].me;
-  if(!r) return;
-  const div=document.createElement("div");
-  div.className="record";
-  div.innerHTML=`<span>${d} · ${r.w}kg ${r.note||""}</span>
-  <button onclick="del('${d}')">删</button>`;
-  list.appendChild(div);
- });
-}
-
-function del(d){
- delete data[d];
- localStorage.setItem("data",JSON.stringify(data));
- load();
-}
-
+const users=document.getElementById("users");
+const newUser=document.getElementById("newUser");
 const weight=document.getElementById("weight");
-const note=document.getElementById("note");
 const todayEl=document.getElementById("today");
-const date=document.getElementById("date");
-const list=document.getElementById("list");
 const streak=document.getElementById("streak");
-const quote=document.getElementById("quote");
+const list=document.getElementById("list");
+const hello=document.getElementById("hello");
 
-load();
+render();
 </script>
 </body>
 </html>
