@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>我们的体重本 💗</title>
+
+  <!-- PWA / iOS App 外观 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="体重本" />
+
+  <title>体重本 💗</title>
 
   <style>
     body {
@@ -14,7 +20,7 @@
 
     .app {
       padding: 20px;
-      padding-bottom: 100px;
+      padding-bottom: 90px;
     }
 
     h1 {
@@ -30,14 +36,14 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 14px;
       border-radius: 14px;
       border: 1px solid #eee;
       font-size: 16px;
-      box-sizing: border-box;
       margin-bottom: 10px;
+      box-sizing: border-box;
     }
 
     button {
@@ -50,11 +56,10 @@
       font-size: 16px;
     }
 
-    .weight-big {
+    .big {
       font-size: 36px;
       font-weight: bold;
       color: #ff8fb1;
-      margin-top: 6px;
     }
 
     .tip {
@@ -70,10 +75,6 @@
       margin-top: 10px;
     }
 
-    .record span {
-      font-size: 15px;
-    }
-
     .record button {
       width: auto;
       padding: 6px 12px;
@@ -81,66 +82,157 @@
       background: #eee;
       color: #666;
     }
+
+    .tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #fff;
+      border-top: 1px solid #eee;
+    }
+
+    .tabs button {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <h1>今天也要温柔一点 🌷</h1>
+<div class="app">
 
+  <!-- 今日 -->
+  <div class="page active" id="home">
+    <h1>今天 🌷</h1>
     <div class="card">
-      <input id="weightInput" type="number" step="0.1" placeholder="输入今天的体重（kg）" />
-      <button onclick="saveToday()">保存今天的记录</button>
-      <div class="weight-big" id="todayWeight">-- kg</div>
-      <div class="tip" id="todayDate"></div>
-    </div>
-
-    <div class="card">
-      <h1 style="font-size:18px;">记录历史 📖</h1>
-      <div id="list"></div>
+      <select id="who">
+        <option value="me">我</option>
+        <option value="ta">TA</option>
+      </select>
+      <input id="weight" type="number" step="0.1" placeholder="体重 kg" />
+      <input id="note" placeholder="备注（吃多了 / 运动了）" />
+      <button onclick="save()">保存</button>
+      <div class="big" id="today">-- kg</div>
+      <div class="tip" id="date"></div>
     </div>
   </div>
 
-  <script>
-    const today = new Date().toISOString().slice(0, 10);
+  <!-- 记录 -->
+  <div class="page" id="listPage">
+    <h1>记录 📖</h1>
+    <div class="card" id="list"></div>
+  </div>
 
-    function load() {
-      const data = JSON.parse(localStorage.getItem("weights") || "{}");
-      if (data[today]) {
-        document.getElementById("todayWeight").innerText = data[today] + " kg";
-      }
-      document.getElementById("todayDate").innerText = "今天：" + today;
-      renderList(data);
+  <!-- 趋势 -->
+  <div class="page" id="chartPage">
+    <h1>趋势 📈</h1>
+    <div class="card">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="page" id="setting">
+    <h1>设置 ⚙️</h1>
+    <div class="card">
+      <input id="meName" placeholder="我的昵称" />
+      <input id="taName" placeholder="TA 的昵称" />
+      <input id="target" placeholder="目标体重 kg" />
+      <button onclick="saveSetting()">保存设置</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部导航 -->
+<div class="tabs">
+  <button onclick="show('home')">🏠</button>
+  <button onclick="show('listPage')">📖</button>
+  <button onclick="show('chartPage')">📈</button>
+  <button onclick="show('setting')">⚙️</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const today = new Date().toISOString().slice(0,10);
+const data = JSON.parse(localStorage.getItem("data") || "{}");
+const setting = JSON.parse(localStorage.getItem("setting") || "{}");
+
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==="chartPage") drawChart();
+}
+
+function save(){
+  const who = document.getElementById("who").value;
+  const w = document.getElementById("weight").value;
+  const note = document.getElementById("note").value;
+  if(!w) return;
+
+  data[today] = data[today] || {};
+  data[today][who] = { w, note };
+  localStorage.setItem("data", JSON.stringify(data));
+  load();
+}
+
+function load(){
+  document.getElementById("date").innerText = today;
+  const t = data[today]?.me?.w;
+  if(t) document.getElementById("today").innerText = t + " kg";
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  Object.keys(data).sort().reverse().forEach(d=>{
+    Object.keys(data[d]).forEach(p=>{
+      const r = data[d][p];
+      const div = document.createElement("div");
+      div.className="record";
+      div.innerHTML = `<span>${d} ${p} ${r.w}kg ${r.note||""}</span>
+        <button onclick="del('${d}','${p}')">删</button>`;
+      list.appendChild(div);
+    });
+  });
+}
+
+function del(d,p){
+  delete data[d][p];
+  localStorage.setItem("data", JSON.stringify(data));
+  load();
+}
+
+function saveSetting(){
+  setting.me = document.getElementById("meName").value;
+  setting.ta = document.getElementById("taName").value;
+  setting.target = document.getElementById("target").value;
+  localStorage.setItem("setting", JSON.stringify(setting));
+}
+
+function drawChart(){
+  const ctx = document.getElementById("chart");
+  const labels=[], values=[];
+  Object.keys(data).sort().forEach(d=>{
+    if(data[d].me){
+      labels.push(d);
+      values.push(data[d].me.w);
     }
+  });
+  new Chart(ctx,{
+    type:"line",
+    data:{labels,datasets:[{data:values,fill:false}]},
+    options:{responsive:true}
+  });
+}
 
-    function saveToday() {
-      const value = document.getElementById("weightInput").value;
-      if (!value) return;
-
-      const data = JSON.parse(localStorage.getItem("weights") || "{}");
-      data[today] = value;
-      localStorage.setItem("weights", JSON.stringify(data));
-
-      document.getElementById("todayWeight").innerText = value + " kg";
-      document.getElementById("weightInput").value = "";
-      renderList(data);
-    }
-
-    function renderList(data) {
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-
-      const keys = Object.keys(data).sort().reverse();
-      if (keys.length === 0) {
-        list.innerHTML = "<div class='tip'>还没有记录</div>";
-        return;
-      }
-
-      keys.forEach(date => {
-        const div = document.createElement("div");
-        div.className = "record";
-        div.innerHTML = `
-          <span>${date} · ${data[date]} kg</span>
-          <button onclick="removeRecord('${date}')">删除</button>
-        `;
-        list.appe
+load();
+</script>
+</body>
+</html>
