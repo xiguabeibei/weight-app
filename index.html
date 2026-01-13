@@ -9,11 +9,11 @@
 
 <style>
 :root{
-  --pink:#ff9ab5;
-  --purple:#b8a6ff;
-  --blue:#a6d8ff;
-  --bg:linear-gradient(180deg,#fff0f5,#f6f7ff);
-  --card:#ffffffcc;
+  --pink:#ff6fa5;
+  --purple:#9b7cff;
+  --blue:#4fd1ff;
+  --bg:linear-gradient(180deg,#fff0f6,#f0f6ff);
+  --card:#ffffffdd;
   --text:#222;
   --sub:#666;
 }
@@ -21,7 +21,7 @@
 @media (prefers-color-scheme: dark){
   :root{
     --bg:linear-gradient(180deg,#0f1115,#1a1d26);
-    --card:#1f2430cc;
+    --card:#1f2430dd;
     --text:#f2f2f2;
     --sub:#aaa;
   }
@@ -45,11 +45,11 @@ h2{font-size:18px;color:var(--sub);margin-bottom:10px;}
 .card{
   backdrop-filter:blur(20px);
   background:var(--card);
-  border-radius:28px;
+  border-radius:30px;
   padding:20px;
-  margin-bottom:18px;
-  box-shadow:0 20px 40px rgba(0,0,0,.12);
-  animation:rise .5s cubic-bezier(.2,.8,.2,1);
+  margin-bottom:22px;
+  box-shadow:0 24px 50px rgba(0,0,0,.15);
+  animation:rise .45s cubic-bezier(.2,.8,.2,1);
 }
 
 @keyframes rise{
@@ -57,7 +57,7 @@ h2{font-size:18px;color:var(--sub);margin-bottom:10px;}
   to{opacity:1;transform:none}
 }
 
-input,select{
+input{
   width:100%;
   padding:16px;
   border-radius:18px;
@@ -101,13 +101,24 @@ button{
   to{opacity:1;transform:none}
 }
 
-.illustration{
-  position:absolute;
-  top:-60px;right:-40px;
-  width:200px;height:200px;
-  background:radial-gradient(circle,var(--blue),transparent 70%);
-  border-radius:50%;
-  z-index:-1;
+.chart{
+  height:220px;
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  padding-top:10px;
+}
+
+.bar{
+  flex:1;
+  border-radius:12px 12px 6px 6px;
+  background:linear-gradient(180deg,var(--blue),var(--purple));
+  animation:grow .6s ease forwards;
+}
+
+@keyframes grow{
+  from{height:0}
+  to{height:var(--h)}
 }
 
 .encourage{
@@ -123,37 +134,18 @@ button{
 
 <div class="page active" id="weightPage">
 <h1>体重记录</h1>
+
 <div class="card">
-<div class="illustration"></div>
 <input id="name" placeholder="姓名">
+<input id="date" type="date">
 <input id="weight" type="number" step="0.1" placeholder="体重 kg">
 <button onclick="saveWeight()">保存体重</button>
 <div id="encourage" class="encourage"></div>
 </div>
-</div>
 
-<div class="page" id="foodPage">
-<h1>饮食记录</h1>
 <div class="card">
-<input id="foodName" placeholder="食材">
-<input id="foodCal" type="number" placeholder="卡路里 kcal">
-<button onclick="saveFood()">保存饮食</button>
-<div id="foodList"></div>
-</div>
-</div>
-
-<div class="page" id="sportPage">
-<h1>运动记录</h1>
-<div class="card">
-<select id="sportType">
-<option>走路</option>
-<option>跑步</option>
-<option>力量</option>
-<option>其他</option>
-</select>
-<input id="sportCal" type="number" placeholder="消耗 kcal">
-<button onclick="saveSport()">保存运动</button>
-<div id="sportList"></div>
+<h2>体重趋势</h2>
+<div class="chart" id="chart"></div>
 </div>
 </div>
 
@@ -161,73 +153,50 @@ button{
 
 <div class="tabs">
 <button onclick="show('weightPage')">⚖️<br>体重</button>
-<button onclick="show('foodPage')">🍽<br>饮食</button>
-<button onclick="show('sportPage')">🏃<br>运动</button>
 </div>
 
 <script>
 const store=JSON.parse(localStorage.getItem("health")||"{}");
-const today=new Date().toISOString().slice(0,10);
+date.value=new Date().toISOString().slice(0,10);
 
 function save(){
  localStorage.setItem("health",JSON.stringify(store));
 }
 
 function saveWeight(){
- const n=name.value.trim(), w=weight.value;
- if(!n||!w)return;
- store[n]=store[n]||{weights:{},foods:{},sports:{}};
- const last=Object.values(store[n].weights).slice(-1)[0];
- store[n].weights[today]=Number(w);
+ const n=name.value.trim();
+ const d=date.value;
+ const w=Number(weight.value);
+ if(!n||!d||!w)return;
+
+ store[n]=store[n]||{weights:{}};
+ const prev=Object.entries(store[n].weights).slice(-1)[0];
+ store[n].weights[d]=w;
  save();
 
- if(last){
+ if(prev){
+  const last=prev[1];
   encourage.innerText=
-   w<last?"你在变轻，真好 🌱":
-   w>last?"一次波动没关系 🍃":
-   "保持也是进步 🤍";
+   w<last?"体重在下降，坚持得很好 🌱":
+   w>last?"有一点波动，别焦虑 🍃":
+   "稳住就是胜利 🤍";
  }else{
-  encourage.innerText="开始记录，就是改变 ✨";
+  encourage.innerText="第一次记录，加油 ✨";
  }
+
+ renderChart(n);
 }
 
-function saveFood(){
- const n=name.value.trim();
- if(!n)return;
- store[n]=store[n]||{weights:{},foods:{},sports:{}};
- store[n].foods[today]=store[n].foods[today]||[];
- store[n].foods[today].push({
-  food:foodName.value,
-  cal:foodCal.value
- });
- save();
- renderFood(n);
-}
+function renderChart(n){
+ chart.innerHTML="";
+ const entries=Object.entries(store[n].weights).sort();
+ const max=Math.max(...entries.map(e=>e[1]));
 
-function saveSport(){
- const n=name.value.trim();
- if(!n)return;
- store[n]=store[n]||{weights:{},foods:{},sports:{}};
- store[n].sports[today]=store[n].sports[today]||[];
- store[n].sports[today].push({
-  type:sportType.value,
-  cal:sportCal.value
- });
- save();
- renderSport(n);
-}
-
-function renderFood(n){
- foodList.innerHTML="";
- (store[n].foods[today]||[]).forEach(i=>{
-  foodList.innerHTML+=`<div>${i.food} · ${i.cal} kcal</div>`;
- });
-}
-
-function renderSport(n){
- sportList.innerHTML="";
- (store[n].sports[today]||[]).forEach(i=>{
-  sportList.innerHTML+=`<div>${i.type} · ${i.cal} kcal</div>`;
+ entries.slice(-7).forEach(e=>{
+  const bar=document.createElement("div");
+  bar.className="bar";
+  bar.style.setProperty("--h",(e[1]/max*100)+"%");
+  chart.appendChild(bar);
  });
 }
 
