@@ -8,236 +8,372 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="健康管理Pro">
     
-    <link rel="manifest" href='data:application/manifest+json,{"display":"standalone","name":"HealthPro","short_name":"Health"}' />
+    <link rel="manifest" href='data:application/manifest+json,{"display":"standalone","name":"HealthPro","short_name":"Health"}'>
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
 
     <title>健康管理Pro</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <style>
-        /* 彻底消除网页感：锁定全局，禁止滚动回弹（橡皮筋效果） */
+        /* 彻底消除网页感：锁定全局，禁止弹性回弹 */
         body { 
             background-color: #f2f2f7; 
             color: #1c1c1e; 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
-            height: 100vh; 
-            width: 100vw;
-            overflow: hidden; 
-            position: fixed; /* 锁定 iPad 窗口位置 */
-            -webkit-user-select: none; /* 禁止长按选中文本，更像 App */
+            font-family: -apple-system, system-ui, sans-serif; 
+            height: 100vh; width: 100vw;
+            overflow: hidden; position: fixed;
+            -webkit-user-select: none;
         }
 
-        /* 沉浸式顶部：为状态栏预留安全区 */
+        /* 沉浸式顶部安全区 */
         header {
             padding-top: env(safe-area-inset-top);
             background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 50;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 50; border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
 
-        /* 主体内容滚动区：模拟原生 App 滚动逻辑 */
+        /* 模拟 App 原生滚动区 */
         #main-scroll {
-            height: 100vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* iPad 丝滑滚动 */
-            padding-top: calc(80px + env(safe-area-inset-top));
+            height: 100vh; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-top: calc(85px + env(safe-area-inset-top));
             padding-bottom: 120px;
         }
-
-        .wechat-card { 
-            background: white; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            border: 1px solid rgba(255,255,255,0.5);
-        }
-        
-        /* 隐藏 iPad 滚动条 */
         #main-scroll::-webkit-scrollbar { display: none; }
 
-        /* 侧边栏优化 */
-        #sidebar { 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            z-index: 100;
-        }
+        /* 卡片样式 */
+        .card { background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+
+        /* 侧边栏动画 */
+        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; }
         .sidebar-hidden { transform: translateX(-100%); position: absolute; }
 
-        /* 录入区组件样式 */
-        input, select { 
-            appearance: none; 
-            -webkit-appearance: none; 
-            background: #f2f2f7 !important;
-            border: none !important;
-            border-radius: 12px !important;
-        }
+        /* 滑动删除 */
+        .swipe-container { position: relative; overflow: hidden; touch-action: pan-x; border-radius: 12px; margin-bottom: 8px; background: #ff3b30; }
+        .swipe-content { position: relative; z-index: 10; transition: transform 0.3s ease; background: white; width: 100%; border-bottom: 1px solid #f2f2f7; }
+        .delete-btn { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; color: white; display: flex; align-items: center; justify-content: center; z-index: 5; font-size: 14px; font-weight: 600; }
 
-        /* 加载动画 */
-        .scale-in { animation: scaleIn 0.3s ease-out; }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .range-btn { font-size: 13px; padding: 4px 12px; border-radius: 20px; color: #8e8e93; background: #e5e5ea; }
+        .range-btn.active { background: #34c759; color: white; }
+        
+        .tab-active { color: #34c759; border-bottom: 3px solid #34c759; }
+        input, select { outline: none; border-radius: 10px; padding: 12px; font-size: 16px; background: #f2f2f7; width: 100%; border: none; }
     </style>
 </head>
 <body class="flex">
 
-    <aside id="sidebar" class="w-72 bg-white/90 backdrop-blur-xl flex flex-col p-6 shrink-0 border-r border-gray-100">
-        <div class="flex items-center justify-between mb-10 mt-4">
-            <span class="text-2xl font-black tracking-tight">档案中心</span>
+    <aside id="sidebar" class="w-72 bg-white/95 backdrop-blur-xl flex flex-col p-6 shrink-0 border-r border-gray-200">
+        <div class="flex items-center justify-between mb-8 mt-4">
+            <span class="text-2xl font-black">档案中心</span>
             <button onclick="toggleSidebar()"><i data-lucide="chevron-left" class="text-gray-400"></i></button>
         </div>
-        <div id="user-nav" class="flex-1 space-y-3 overflow-y-auto"></div>
-        <button onclick="addUser()" class="mt-4 w-full py-4 bg-gray-900 text-white text-lg font-bold rounded-2xl shadow-lg active:scale-95 transition-all">+ 新成员</button>
+        <div id="user-nav" class="flex-1 space-y-2 overflow-y-auto"></div>
+        <button onclick="addUser()" class="mt-4 w-full py-4 bg-gray-900 text-white text-lg font-bold rounded-2xl shadow-lg">+ 添加成员</button>
     </aside>
 
     <main class="flex-1 relative">
-        <header class="fixed top-0 left-0 right-0 border-b border-gray-100 flex items-center justify-between px-8 py-4">
+        <header class="fixed top-0 left-0 right-0 flex items-center justify-between px-8 py-4">
             <div class="flex items-center gap-6">
                 <button id="sidebar-open" onclick="toggleSidebar()" class="hidden p-3 bg-gray-100 rounded-2xl"><i data-lucide="menu"></i></button>
                 <div class="flex flex-col">
-                    <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Selected Date</span>
-                    <input type="date" id="view-date" onchange="render()" class="font-black text-xl bg-transparent w-auto">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Selected Date</span>
+                    <input type="date" id="view-date" onchange="render()" class="font-bold text-xl bg-transparent w-auto">
                 </div>
             </div>
             <button onclick="openManageModal()" class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
-                <i data-lucide="settings-2"></i>
+                <i data-lucide="settings"></i>
             </button>
         </header>
 
         <div id="main-scroll">
-            <div class="max-w-6xl mx-auto px-6 space-y-8">
+            <div class="max-w-5xl mx-auto px-6 space-y-8">
                 
-                <div class="wechat-card p-8 bg-gradient-to-br from-white to-gray-50">
-                    <div class="flex justify-between items-start mb-8">
+                <section class="card p-8">
+                    <div class="flex justify-between items-start mb-6">
                         <div>
                             <div class="flex items-center gap-4 mb-3">
                                 <h1 id="display-name" class="text-5xl font-black tracking-tighter">--</h1>
                                 <div id="display-gender"></div>
                             </div>
                             <div class="flex gap-3">
-                                <span class="bg-gray-200/50 px-4 py-1.5 rounded-full text-sm font-bold">目标 <b id="display-target">--</b> KG</span>
-                                <span onclick="editWish()" class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-bold cursor-pointer">愿望: <b id="display-wish">设置</b></span>
+                                <span class="bg-gray-100 px-4 py-1.5 rounded-full text-sm font-bold">目标 <b id="display-target">--</b> KG</span>
+                                <span onclick="editWish()" class="bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-sm font-bold cursor-pointer">愿望: <b id="display-wish">设置</b></span>
                             </div>
                         </div>
                         <div class="text-right">
                             <div id="weight-diff" class="text-6xl font-black text-[#34c759] tracking-tighter">0.0</div>
-                            <p class="text-[10px] text-gray-300 font-black mt-1 uppercase">KG to Goal</p>
+                            <p class="text-[10px] text-gray-300 font-bold mt-1">KG TO GOAL</p>
                         </div>
                     </div>
-                    <div id="display-mood" onclick="editMood()" class="bg-white border border-gray-100 p-6 rounded-3xl text-xl text-gray-500 italic shadow-sm">
+                    <div id="display-mood" onclick="editMood()" class="bg-gray-50 p-5 rounded-2xl text-lg text-gray-500 italic cursor-pointer">
                         “ 记录今日感悟... ”
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="wechat-card p-6">
-                        <div class="flex justify-between items-center mb-6 px-2">
-                            <h3 class="text-xl font-black">养成兴趣</h3>
-                            <button onclick="addInterest()" class="text-[#34c759]"><i data-lucide="plus-circle" class="w-8 h-8"></i></button>
-                        </div>
-                        <div id="interest-list" class="space-y-4"></div>
-                    </div>
-
-                    <div class="space-y-8">
-                        <div class="wechat-card p-6">
-                            <div class="flex justify-between items-center mb-6">
-                                <span class="font-black">体重轨迹</span>
-                                <div class="flex gap-1" id="w-range-btns">
-                                    <button onclick="updateRange('weight', 7)" class="range-btn">7D</button>
-                                    <button onclick="updateRange('weight', 30)" class="range-btn">1M</button>
-                                    <button onclick="updateRange('weight', 365)" class="range-btn">1Y</button>
-                                </div>
-                            </div>
-                            <div class="h-64"><canvas id="weightChart"></canvas></div>
-                        </div>
-                        
-                        <div class="wechat-card p-6">
-                            <div class="flex justify-between items-center mb-6">
-                                <span class="font-black">血压心率</span>
-                                <div class="flex gap-1" id="bp-range-btns">
-                                    <button onclick="updateRange('bp', 7)" class="range-btn">7D</button>
-                                    <button onclick="updateRange('bp', 30)" class="range-btn">1M</button>
-                                    <button onclick="updateRange('bp', 365)" class="range-btn">1Y</button>
-                                </div>
-                            </div>
-                            <div class="h-64"><canvas id="bpChart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-
-                <section class="wechat-card p-8 border-2 border-green-500/10 shadow-xl scale-in">
-                    <div class="flex gap-6 border-b border-gray-100 mb-8 overflow-x-auto no-scrollbar">
-                        <button onclick="setLogType('weight')" id="tab-weight" class="pb-4 text-xl font-black">测体重</button>
-                        <button onclick="setLogType('bp')" id="tab-bp" class="pb-4 text-xl font-black">量血压</button>
-                        <button onclick="setLogType('food')" id="tab-food" class="pb-4 text-xl font-black">吃补给</button>
-                        <button onclick="setLogType('sport')" id="tab-sport" class="pb-4 text-xl font-black">去消耗</button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-end">
-                        <div class="md:col-span-1">
-                            <label class="text-[10px] font-black text-gray-300 mb-2 block uppercase">Date</label>
-                            <input type="date" id="log-date" class="py-3 px-4 font-bold">
-                        </div>
-                        <div id="entry-form-fields" class="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-                        <button onclick="submitEntry()" class="md:col-span-1 h-[52px] bg-[#34c759] text-white rounded-2xl font-black text-xl shadow-lg shadow-green-200 active:scale-95 transition-all">记录</button>
                     </div>
                 </section>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div id="list-food" class="space-y-3"></div>
-                    <div id="list-sport" class="space-y-3"></div>
-                    <div id="list-bp" class="space-y-3"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="font-bold text-lg">体重轨迹</span>
+                            <div class="flex gap-1" id="w-range-btns">
+                                <button onclick="updateRange('weight', 7)" class="range-btn">7D</button>
+                                <button onclick="updateRange('weight', 30)" class="range-btn">1M</button>
+                                <button onclick="updateRange('weight', 365)" class="range-btn">1Y</button>
+                            </div>
+                        </div>
+                        <div class="h-64"><canvas id="weightChart"></canvas></div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="font-bold text-lg">血压 & 心率</span>
+                            <div class="flex gap-1" id="bp-range-btns">
+                                <button onclick="updateRange('bp', 7)" class="range-btn">7D</button>
+                                <button onclick="updateRange('bp', 30)" class="range-btn">1M</button>
+                                <button onclick="updateRange('bp', 365)" class="range-btn">1Y</button>
+                            </div>
+                        </div>
+                        <div class="h-64"><canvas id="bpChart"></canvas></div>
+                    </div>
+                </div>
+
+                <section class="card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold">坚持兴趣</h3>
+                        <button onclick="addInterest()" class="text-[#34c759]"><i data-lucide="plus-circle"></i></button>
+                    </div>
+                    <div id="interest-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </section>
+
+                <section class="card p-8 border-2 border-green-100">
+                    <div class="flex gap-6 border-b border-gray-100 mb-8 overflow-x-auto">
+                        <button onclick="setLogType('weight')" id="tab-weight" class="pb-4 text-lg font-bold">测体重</button>
+                        <button onclick="setLogType('bp')" id="tab-bp" class="pb-4 text-lg font-bold">量血压</button>
+                        <button onclick="setLogType('food')" id="tab-food" class="pb-4 text-lg font-bold">吃补给</button>
+                        <button onclick="setLogType('sport')" id="tab-sport" class="pb-4 text-lg font-bold">去消耗</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-end">
+                        <div class="md:col-span-1">
+                            <label class="text-[10px] font-bold text-gray-300 mb-2 block uppercase">Date</label>
+                            <input type="date" id="log-date">
+                        </div>
+                        <div id="entry-form-fields" class="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                        <button onclick="submitEntry()" class="md:col-span-1 h-[48px] bg-[#34c759] text-white rounded-2xl font-bold text-lg active:scale-95 transition-all">记录</button>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="list-food"></div><div id="list-sport"></div><div id="list-bp"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="manage-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
-        <div class="bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl scale-in">
-            <h2 class="text-3xl font-black mb-8 tracking-tighter">修改档案设置</h2>
-            <div class="space-y-6">
-                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Name</label><input type="text" id="m-name" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100"></div>
-                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Gender</label><select id="m-gender" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100 w-full"><option value="female">女生</option><option value="male">男生</option></select></div>
-                <div><label class="text-xs font-black text-gray-400 ml-1 uppercase">Target Weight (KG)</label><input type="number" id="m-target" class="mt-2 text-lg font-bold py-4 px-6 bg-gray-100"></div>
+    <div id="manage-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md z-[200] flex items-center justify-center p-6">
+        <div class="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl">
+            <h2 class="text-2xl font-black mb-6">修改档案设置</h2>
+            <div class="space-y-4">
+                <div><label class="text-xs font-bold text-gray-400 uppercase">Name</label><input type="text" id="m-name" class="mt-1"></div>
+                <div><label class="text-xs font-bold text-gray-400 uppercase">Gender</label><select id="m-gender" class="mt-1"><option value="female">女生</option><option value="male">男生</option></select></div>
+                <div><label class="text-xs font-bold text-gray-400 uppercase">Target Weight (KG)</label><input type="number" id="m-target" class="mt-1"></div>
             </div>
-            <div class="flex gap-4 mt-12">
-                <button onclick="closeManageModal()" class="flex-1 py-5 text-gray-400 font-bold text-lg">放弃修改</button>
-                <button onclick="saveUserManage()" class="flex-1 py-5 bg-black text-white rounded-[20px] font-black text-lg shadow-xl shadow-gray-200">确认保存</button>
+            <div class="flex gap-4 mt-8">
+                <button onclick="closeManageModal()" class="flex-1 py-4 text-gray-400 font-bold">取消</button>
+                <button onclick="saveUserManage()" class="flex-1 py-4 bg-black text-white rounded-2xl font-bold">保存修改</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ... (保留你原来的 JavaScript 代码，只需将下面的 window.onload 替换掉即可)
-        
-        // 核心同步逻辑 (此处仅为补全，实际使用时请确保包含你之前的所有 JS 函数)
-        let users = JSON.parse(localStorage.getItem('health_v3_core') || '[]');
-        let curUid = localStorage.getItem('health_uid_v3') || (users[0]?.id || null);
+        // 核心逻辑数据结构
+        let users = JSON.parse(localStorage.getItem('health_ipad_v3') || '[]');
+        let curUid = localStorage.getItem('health_ipad_uid') || (users[0]?.id || null);
         let entryType = 'weight', charts = {}, ranges = { weight: 7, bp: 7 };
 
-        // [此处插入你代码中原有的所有 JS 函数，如 sync, render, submitEntry 等]
-        
-        // 针对 iPad 锁死浏览器默认行为
-        document.addEventListener('touchmove', function (e) {
-            if (e.target.closest('#main-scroll') || e.target.closest('#sidebar')) {
-                // 允许特定区域滚动
-            } else {
-                e.preventDefault(); 
+        // 滑动删除交互控制
+        let tStart = 0, currentSwipeEl = null;
+        document.addEventListener('touchstart', e => {
+            const content = e.target.closest('.swipe-content');
+            if (content) {
+                document.querySelectorAll('.swipe-content').forEach(el => { if(el !== content) el.style.transform = 'translateX(0)'; });
+                tStart = e.touches[0].clientX;
+                currentSwipeEl = content;
             }
-        }, { passive: false });
+        });
+        document.addEventListener('touchmove', e => {
+            if (!currentSwipeEl) return;
+            let diff = e.touches[0].clientX - tStart;
+            if (diff < -10) currentSwipeEl.style.transform = `translateX(${Math.max(diff, -80)}px)`;
+            if (diff > 10) currentSwipeEl.style.transform = `translateX(0)`;
+        });
+        document.addEventListener('touchend', e => {
+            if (!currentSwipeEl) return;
+            let diff = e.changedTouches[0].clientX - tStart;
+            currentSwipeEl.style.transform = diff < -40 ? `translateX(-80px)` : `translateX(0)`;
+            currentSwipeEl = null;
+        });
+
+        // 数据同步与渲染
+        function sync() {
+            localStorage.setItem('health_ipad_v3', JSON.stringify(users));
+            if(curUid) localStorage.setItem('health_ipad_uid', curUid);
+            render();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('sidebar-hidden');
+            document.getElementById('sidebar-open').classList.toggle('hidden');
+        }
+
+        function setLogType(t) { entryType = t; renderEntryForm(); }
+        function updateRange(type, day) { ranges[type] = day; render(); }
+
+        function renderEntryForm() {
+            const container = document.getElementById('entry-form-fields');
+            ['weight', 'bp', 'food', 'sport'].forEach(t => {
+                document.getElementById('tab-'+t).className = `pb-4 text-lg font-bold transition-all ${entryType === t ? 'tab-active' : 'text-gray-300'}`;
+            });
+            if(entryType === 'weight') {
+                container.innerHTML = `<div><label class="text-[10px] font-bold text-gray-400 uppercase">Slot</label><select id="e-slot"><option>早起</option><option>睡前</option></select></div><div class="md:col-span-2"><label class="text-[10px] font-bold text-gray-400 uppercase">Weight (KG)</label><input type="number" id="e-val" placeholder="0.0"></div>`;
+            } else if(entryType === 'bp') {
+                container.innerHTML = `<div><label class="text-[10px] font-bold text-gray-400 uppercase">Slot</label><select id="e-slot"><option>早起</option><option>睡前</option></select></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">SYS/DIA</label><div class="flex gap-1"><input type="number" id="e-high" placeholder="高"><input type="number" id="e-low" placeholder="低"></div></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">HR (BPM)</label><input type="number" id="e-hr" placeholder="心率"></div>`;
+            } else {
+                container.innerHTML = `<div><label class="text-[10px] font-bold text-gray-400 uppercase">Type</label><select id="e-slot"><option>主餐</option><option>零食</option><option>有氧</option><option>无氧</option></select></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Name</label><input type="text" id="e-name" placeholder="名称"></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Kcal</label><input type="number" id="e-cal" placeholder="0"></div>`;
+            }
+        }
+
+        function submitEntry() {
+            const u = users.find(x => x.id == curUid); if(!u) return;
+            const logDate = document.getElementById('log-date').value;
+            const slot = document.getElementById('e-slot').value;
+            const ts = new Date(logDate).getTime();
+
+            if(entryType === 'weight') {
+                const val = parseFloat(document.getElementById('e-val').value);
+                if(val) u.weights.push({ id: Date.now(), val, date: logDate, slot, ts });
+            } else if(entryType === 'bp') {
+                const high = parseInt(document.getElementById('e-high').value);
+                const low = parseInt(document.getElementById('e-low').value);
+                const hr = parseInt(document.getElementById('e-hr').value);
+                if(high && low) u.bps.push({ id: Date.now(), high, low, hr, date: logDate, slot, ts });
+            } else {
+                const name = document.getElementById('e-name').value;
+                const cal = parseInt(document.getElementById('e-cal').value);
+                if(name) u.logs.unshift({ id: Date.now(), type: entryType, name, cal: cal||0, slot, date: logDate });
+            }
+            sync();
+        }
+
+        function render() {
+            const uNav = document.getElementById('user-nav');
+            uNav.innerHTML = users.map(u => `
+                <div class="swipe-container">
+                    <div class="delete-btn" onclick="deleteItem(${u.id}, 'user')">删除</div>
+                    <div onclick="curUid=${u.id};sync()" class="swipe-content p-4 rounded-xl text-lg font-bold ${curUid == u.id ? 'text-[#34c759] bg-white shadow-sm' : 'text-gray-400'}">
+                        ${u.name}
+                    </div>
+                </div>`).join('');
+            
+            const u = users.find(x => x.id == curUid); if(!u) return;
+
+            document.getElementById('display-name').innerText = u.name;
+            document.getElementById('display-target').innerText = u.target || '60.0';
+            document.getElementById('display-wish').innerText = u.wish || '设置愿望';
+            document.getElementById('display-mood').innerText = u.mood ? `“ ${u.mood} ”` : '“ 记录今日感悟... ”';
+            document.getElementById('display-gender').innerHTML = `<i data-lucide="${u.gender==='male'?'mars':'venus'}" class="w-6 h-6 ${u.gender==='male'?'text-blue-500':'text-pink-500'}"></i>`;
+
+            const sortedW = [...u.weights].sort((a,b)=>a.ts-b.ts);
+            const curW = sortedW.length ? sortedW[sortedW.length-1].val : (u.target || 0);
+            document.getElementById('weight-diff').innerText = (curW - (u.target || 0)).toFixed(1);
+
+            // 兴趣列表
+            document.getElementById('interest-list').innerHTML = (u.interests || []).map(i => `
+                <div class="swipe-container">
+                    <div class="delete-btn" onclick="deleteItem(${i.id}, 'interest')">删除</div>
+                    <div class="swipe-content p-4 flex justify-between items-center border border-gray-50 rounded-xl">
+                        <div class="flex items-center gap-4">
+                            <button onclick="toggleInterest(${i.id})" class="text-${i.paused?'gray-300':'[#34c759]'}">
+                                <i data-lucide="${i.paused?'play-circle':'pause-circle'}" class="w-8 h-8"></i>
+                            </button>
+                            <span class="text-lg font-bold ${i.paused?'text-gray-300 line-through':''}">${i.name}</span>
+                        </div>
+                        <span class="text-[10px] font-black text-gray-300 bg-gray-50 px-2 py-1 rounded">START: ${new Date(i.start).toLocaleDateString()}</span>
+                    </div>
+                </div>`).join('');
+
+            // 详细日志列表 (过滤当前日期)
+            const vDate = document.getElementById('view-date').value;
+            const logs = u.logs.filter(l => l.date === vDate);
+            const listTpl = (l, color) => `
+                <div class="swipe-container shadow-sm">
+                    <div class="delete-btn" onclick="deleteItem(${l.id}, 'log')">删除</div>
+                    <div class="swipe-content p-4 flex justify-between items-center">
+                        <div><div class="font-bold text-lg">${l.name}</div><div class="text-[10px] text-gray-300 font-bold uppercase">${l.slot}</div></div>
+                        <div class="text-xl font-black text-${color}-500">${l.cal} <small class="text-[10px]">Kcal</small></div>
+                    </div>
+                </div>`;
+            document.getElementById('list-food').innerHTML = `<p class="text-[10px] font-black text-gray-300 mb-2 ml-1 uppercase">Food Intake</p>` + logs.filter(l=>l.type==='food').map(l=>listTpl(l, 'orange')).join('');
+            document.getElementById('list-sport').innerHTML = `<p class="text-[10px] font-black text-gray-300 mb-2 ml-1 uppercase">Exercise</p>` + logs.filter(l=>l.type==='sport').map(l=>listTpl(l, 'blue')).join('');
+            
+            const dayBps = u.bps.filter(b => b.date === vDate);
+            document.getElementById('list-bp').innerHTML = `<p class="text-[10px] font-black text-gray-300 mb-2 ml-1 uppercase">Vital Signs</p>` + dayBps.map(b => `
+                <div class="swipe-container shadow-sm">
+                    <div class="delete-btn" onclick="deleteItem(${b.id}, 'bp_record')">删除</div>
+                    <div class="swipe-content p-4 flex justify-between items-center">
+                        <div><div class="font-bold text-lg">${b.high}/${b.low}</div><div class="text-[10px] text-gray-300 font-bold uppercase">${b.slot} HR:${b.hr}</div></div>
+                        <i data-lucide="activity" class="text-[#34c759] w-5 h-5"></i>
+                    </div>
+                </div>`).join('');
+
+            updateCharts(u); renderEntryForm(); lucide.createIcons();
+        }
+
+        function updateCharts(u) {
+            const filter = (arr, d) => arr.filter(i => i.ts >= Date.now() - d*86400000).sort((a,b)=>a.ts-b.ts);
+            
+            // 体重
+            const wd = filter(u.weights, ranges.weight);
+            if(charts.w) charts.w.destroy();
+            charts.w = new Chart(document.getElementById('weightChart'), {
+                type: 'line', 
+                data: { labels: wd.map(d=>d.date.slice(5)), datasets: [{ data: wd.map(d=>d.val), borderColor: '#34c759', borderWidth: 4, tension: 0.4, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#f2f2f7' } } } }
+            });
+
+            // 血压
+            const bd = filter(u.bps, ranges.bp);
+            if(charts.bp) charts.bp.destroy();
+            charts.bp = new Chart(document.getElementById('bpChart'), {
+                type: 'line', 
+                data: { labels: bd.map(d=>d.date.slice(5)), datasets: [{ label: 'SYS', data: bd.map(d=>d.high), borderColor: '#ff3b30', tension: 0.4, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#f2f2f7' } } } }
+            });
+        }
+
+        // 功能交互
+        function editWish() { const u=users.find(x=>x.id==curUid); const w=prompt("愿望:", u.wish); if(w){u.wish=w; sync();} }
+        function editMood() { const u=users.find(x=>x.id==curUid); const m=prompt("感悟:", u.mood); if(m){u.mood=m; sync();} }
+        function toggleInterest(id) { const u=users.find(x=>x.id==curUid); const i=u.interests.find(it=>it.id===id); i.paused=!i.paused; sync(); }
+        function addInterest() { const n=prompt("项目:"); if(n){ const u=users.find(x=>x.id==curUid); (u.interests=u.interests||[]).push({id:Date.now(), name:n, start:Date.now(), paused:false}); sync(); } }
+        function addUser() { const n=prompt("姓名:"); if(n){ users.push({id:Date.now(), name:n, target:60, gender:'female', weights:[], bps:[], logs:[], interests:[]}); sync(); } }
+        function deleteItem(id, type) {
+            if(type==='user') { users=users.filter(u=>u.id!==id); curUid=users[0]?.id || null; }
+            else { const u=users.find(x=>x.id==curUid); if(type==='interest') u.interests=u.interests.filter(i=>i.id!==id); else if(type==='bp_record') u.bps=u.bps.filter(b=>b.id!==id); else u.logs=u.logs.filter(l=>l.id!==id); }
+            sync();
+        }
+        function openManageModal() { const u=users.find(x=>x.id==curUid); document.getElementById('m-name').value=u.name; document.getElementById('m-target').value=u.target; document.getElementById('manage-modal').classList.remove('hidden'); }
+        function closeManageModal() { document.getElementById('manage-modal').classList.add('hidden'); }
+        function saveUserManage() { const u=users.find(x=>x.id==curUid); u.name=document.getElementById('m-name').value; u.target=parseFloat(document.getElementById('m-target').value); u.gender=document.getElementById('m-gender').value; closeManageModal(); sync(); }
 
         window.onload = () => { 
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('view-date').value = today; 
-            document.getElementById('log-date').value = today; 
-            sync(); 
-            
-            // iPad 特有的全屏检测
-            if (window.navigator.standalone) {
-                console.log("已经以 App 模式运行");
-            }
+            document.getElementById('view-date').value = today; document.getElementById('log-date').value = today; sync(); 
+            // 锁定 iPad 橡皮筋回弹
+            document.addEventListener('touchmove', (e) => { if(!e.target.closest('#main-scroll')) e.preventDefault(); }, {passive: false});
         };
-
-        // ... (确保补全你剩余的逻辑函数)
     </script>
 </body>
 </html>
