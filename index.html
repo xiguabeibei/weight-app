@@ -4,246 +4,340 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="健康记录">
-<title>健康记录</title>
+<title>家庭健康记录</title>
 
 <style>
+:root{
+ --bg:#f6f7fb;
+ --card:#ffffff;
+ --text:#222;
+ --primary:#ff8fb1;
+ --accent:#a78bfa;
+}
+body.dark{
+ --bg:#1e1e2f;
+ --card:#2b2b3c;
+ --text:#f4f4f5;
+}
 body{
  margin:0;
  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC";
- background:#f6f7fb;
- color:#222;
-}
-header{
- height:56px;
+ background:var(--bg);
+ color:var(--text);
  display:flex;
- align-items:center;
- justify-content:space-between;
- padding:0 16px;
- background:#fff;
- box-shadow:0 4px 20px rgba(0,0,0,.08);
+ height:100vh;
 }
-header button{border:none;background:none;font-size:20px;}
-main{padding:16px;}
+
+/* 左侧栏 */
+aside{
+ width:260px;
+ background:var(--card);
+ box-shadow:4px 0 20px rgba(0,0,0,.08);
+ padding:16px;
+ overflow:auto;
+}
+aside h3{margin-top:0;}
+aside button{
+ width:100%;
+ margin-bottom:8px;
+ padding:10px;
+ border:none;
+ border-radius:12px;
+ background:#eee;
+}
+.member{
+ margin-bottom:12px;
+}
+.member div{
+ padding:6px 10px;
+ border-radius:10px;
+ cursor:pointer;
+}
+.member div:hover{background:#ddd}
+
+/* 主区 */
+main{
+ flex:1;
+ padding:20px;
+ overflow:auto;
+}
 .card{
- background:#fff;
+ background:var(--card);
  border-radius:20px;
  padding:16px;
  margin-bottom:16px;
- box-shadow:0 12px 30px rgba(0,0,0,.1);
+ box-shadow:0 10px 30px rgba(0,0,0,.1);
 }
-h2{margin:0 0 12px;}
-input{
+input,select{
  width:100%;
- padding:14px;
- border-radius:14px;
- border:1px solid #ddd;
+ padding:12px;
+ border-radius:12px;
+ border:1px solid #ccc;
  margin-bottom:10px;
- font-size:16px;
 }
-button.primary{
- width:100%;
- padding:14px;
- border:none;
- border-radius:999px;
- background:linear-gradient(135deg,#ff8fb1,#a78bfa);
+.primary{
+ background:linear-gradient(135deg,var(--primary),var(--accent));
  color:#fff;
- font-size:16px;
+ border:none;
+ padding:12px;
+ border-radius:999px;
+ width:100%;
 }
-.item{display:flex;gap:8px;margin-bottom:8px;}
-.item input{flex:1;}
-canvas{width:100%;height:220px;}
+canvas{width:100%;height:240px}
+
+/* 进度条 */
+.progress{
+ height:14px;
+ background:#ddd;
+ border-radius:999px;
+ overflow:hidden;
+}
+.progress div{
+ height:100%;
+ background:linear-gradient(135deg,#67e8f9,#a78bfa);
+}
+.tip{
+ margin-top:10px;
+ color:var(--primary);
+ font-weight:500;
+}
 </style>
 </head>
 
 <body>
 
-<header>
-<button onclick="toggleMenu()">☰</button>
-<div id="userName">未选择成员</div>
-<button onclick="showPage('settings')">⚙️</button>
-</header>
+<aside>
+<h3>设置</h3>
+<button onclick="showPage('settings')">添加成员</button>
+<select onchange="setTheme(this.value)">
+ <option value="system">跟随系统</option>
+ <option value="light">日间模式</option>
+ <option value="dark">夜间模式</option>
+</select>
 
-<main id="menu" style="display:none">
-<div class="card">
-<button class="primary" onclick="showPage('weight')">⚖️ 体重</button><br><br>
-<button class="primary" onclick="showPage('food')">🍚 饮食</button><br><br>
-<button class="primary" onclick="showPage('sport')">🏃 运动</button>
-</div>
-</main>
+<h3>成员信息</h3>
+<div id="members"></div>
+</aside>
 
-<main id="content">
-
-<div class="card">
-<input type="date" id="date">
-<button onclick="timeType='am'">🌅 早</button>
-<button onclick="timeType='pm'">🌙 晚</button>
-</div>
-
-<!-- 体重 -->
-<div id="weight" class="card">
-<h2>体重</h2>
-<input type="number" id="weightVal" placeholder="体重 kg">
-<button class="primary" onclick="saveWeight()">保存体重</button>
-<canvas id="weightChart"></canvas>
-</div>
-
-<!-- 饮食 -->
-<div id="food" class="card" style="display:none">
-<h2>饮食</h2>
-<div id="foods"></div>
-<button onclick="addFood()">➕ 添加食物</button>
-<button class="primary" onclick="saveFood()">保存饮食</button>
-<div id="foodTotal"></div>
-<canvas id="foodChart"></canvas>
-</div>
-
-<!-- 运动 -->
-<div id="sport" class="card" style="display:none">
-<h2>运动</h2>
-<div id="sports"></div>
-<button onclick="addSport()">➕ 添加运动</button>
-<button class="primary" onclick="saveSport()">保存运动</button>
-<div id="sportTotal"></div>
-</div>
-
-<!-- 设置 -->
-<div id="settings" class="card" style="display:none">
-<h2>成员设置</h2>
-<input id="memberName" placeholder="成员名">
-<input id="startWeight" placeholder="初始体重">
-<input id="targetWeight" placeholder="目标体重">
-<button class="primary" onclick="saveMember()">保存成员</button>
-</div>
-
+<main>
+<div id="content"></div>
 </main>
 
 <script>
-let store=JSON.parse(localStorage.getItem("healthPro")||"{}");
-let currentUser=Object.keys(store)[0]||"";
+let store=JSON.parse(localStorage.getItem("healthFinal")||"{}");
+let currentUser=null;
+let page="weight";
 let timeType="pm";
-date.value=new Date().toISOString().slice(0,10);
+let range=7;
 
-function saveStore(){
- localStorage.setItem("healthPro",JSON.stringify(store));
+function save(){localStorage.setItem("healthFinal",JSON.stringify(store));}
+
+function setTheme(t){
+ localStorage.setItem("theme",t);
+ applyTheme();
 }
-
-function toggleMenu(){
- menu.style.display=menu.style.display?"":"block";
+function applyTheme(){
+ const t=localStorage.getItem("theme")||"system";
+ if(t==="dark")document.body.classList.add("dark");
+ else if(t==="light")document.body.classList.remove("dark");
+ else{
+  document.body.classList.toggle("dark",
+   window.matchMedia("(prefers-color-scheme: dark)").matches);
+ }
 }
+applyTheme();
 
-function showPage(id){
- ["weight","food","sport","settings"].forEach(p=>{
-  document.getElementById(p).style.display="none";
+function renderMembers(){
+ members.innerHTML="";
+ Object.keys(store).forEach(n=>{
+  const d=document.createElement("div");
+  d.className="member";
+  d.innerHTML=`
+   <strong>${n}</strong>
+   <div onclick="open('${n}','weight')">体重记录</div>
+   <div onclick="open('${n}','food')">饮食摄入</div>
+   <div onclick="open('${n}','sport')">运动减脂</div>
+  `;
+  members.appendChild(d);
  });
- document.getElementById(id).style.display="block";
- menu.style.display="none";
+}
+renderMembers();
+
+function open(name,p){
+ currentUser=name;
+ page=p;
+ render();
 }
 
-function ensure(){
- if(!currentUser)return;
+function showPage(p){
+ page=p;
+ render();
+}
+
+function ensure(date){
  store[currentUser].records=store[currentUser].records||{};
- store[currentUser].records[date.value]=
- store[currentUser].records[date.value]||{
-  am:{},pm:{},
-  foods:[],foodTotal:0,
-  sport:[],sportTotal:0
+ store[currentUser].records[date]=store[currentUser].records[date]||{
+  am:{},pm:{},foods:[],foodTotal:0,sport:[],sportTotal:0
  };
 }
 
+function render(){
+ if(!currentUser){
+  content.innerHTML="<div class='card'>请先添加成员</div>";
+  return;
+ }
+ if(page==="settings"){
+  content.innerHTML=`
+   <div class="card">
+    <input id="name" placeholder="成员名">
+    <input id="start" placeholder="初始体重">
+    <input id="target" placeholder="目标体重">
+    <button class="primary" onclick="addMember()">保存</button>
+   </div>`;
+  return;
+ }
+ const today=new Date().toISOString().slice(0,10);
+ const profile=store[currentUser].profile;
+ let html=`
+ <div class="card">
+  <h2>${currentUser}</h2>
+  <div>初始 ${profile.start}kg → 目标 ${profile.target}kg</div>
+  <div class="progress"><div style="width:${progress()}%"></div></div>
+  <div class="tip">${tip()}</div>
+ </div>`;
+ if(page==="weight")html+=weightUI(today);
+ if(page==="food")html+=foodUI(today);
+ if(page==="sport")html+=sportUI(today);
+ content.innerHTML=html;
+}
+
+function progress(){
+ const p=store[currentUser].profile;
+ const records=Object.values(store[currentUser].records||{});
+ const last=records.at(-1)?.pm?.weight;
+ if(!last)return 0;
+ return Math.min(100,
+  (p.start-last)/(p.start-p.target)*100);
+}
+
+function tip(){
+ const p=store[currentUser].profile;
+ const records=Object.values(store[currentUser].records||{});
+ const last=records.at(-1)?.pm?.weight;
+ if(!last)return "记录从今天开始 🌱";
+ const diff=(last-p.target).toFixed(1);
+ return diff>0?
+  `距离目标还有 ${diff}kg，加油 💪`:
+  "已达到目标，太棒了 🎉";
+}
+
+function weightUI(date){
+ return `
+ <div class="card">
+  <input type="date" id="date" value="${date}">
+  <button onclick="timeType='am'">早</button>
+  <button onclick="timeType='pm'">晚</button>
+  <input id="w" placeholder="体重 kg">
+  <button class="primary" onclick="saveWeight()">保存</button>
+  <select onchange="range=this.value;drawWeight()">
+   <option value="7">7天</option><option value="30">1月</option>
+   <option value="90">3月</option><option value="180">半年</option>
+   <option value="365">1年</option>
+  </select>
+  <canvas id="wc"></canvas>
+ </div>`;
+}
+
 function saveWeight(){
- ensure();
- store[currentUser].records[date.value][timeType].weight=Number(weightVal.value);
- saveStore();drawWeight();
+ const d=document.getElementById("date").value;
+ ensure(d);
+ store[currentUser].records[d][timeType].weight=Number(w.value);
+ save();drawWeight();render();
+}
+
+function drawWeight(){
+ const c=wc.getContext("2d");
+ c.clearRect(0,0,300,300);
+ const rec=Object.entries(store[currentUser].records)
+  .slice(-range)
+  .map(r=>r[1].pm.weight).filter(Boolean);
+ if(!rec.length)return;
+ c.beginPath();
+ rec.forEach((v,i)=>{
+  const x=i*(300/rec.length);
+  const y=220-(v/Math.max(...rec))*180;
+  i?c.lineTo(x,y):c.moveTo(x,y);
+ });
+ c.strokeStyle="#ff8fb1";
+ c.lineWidth=3;
+ c.stroke();
+}
+
+function foodUI(date){
+ return `
+ <div class="card">
+  <input type="date" id="date" value="${date}">
+  <button onclick="addFood()">添加食品</button>
+  <div id="foods"></div>
+  <button class="primary" onclick="saveFood()">保存</button>
+  <canvas id="fc"></canvas>
+ </div>`;
 }
 
 function addFood(){
  const d=document.createElement("div");
- d.className="item";
- d.innerHTML='<input placeholder="食物"><input type="number" placeholder="kcal">';
+ d.innerHTML='<input placeholder="食物"><input placeholder="kcal">';
  foods.appendChild(d);
 }
 
 function saveFood(){
- ensure();
- let total=0;
- store[currentUser].records[date.value].foods=
- [...foods.children].map(f=>{
-  const kcal=Number(f.children[1].value||0);
-  total+=kcal;
-  return {name:f.children[0].value,kcal};
+ const d=document.getElementById("date").value;
+ ensure(d);
+ let t=0;
+ store[currentUser].records[d].foods=[...foods.children].map(f=>{
+  const k=Number(f.children[1].value||0);t+=k;
+  return {name:f.children[0].value,kcal:k};
  });
- store[currentUser].records[date.value].foodTotal=total;
- foodTotal.innerText="今日摄入："+total+" kcal";
- saveStore();drawFood();
+ store[currentUser].records[d].foodTotal=t;
+ save();render();
+}
+
+function sportUI(date){
+ return `
+ <div class="card">
+  <input type="date" id="date" value="${date}">
+  <button onclick="addSport()">添加运动</button>
+  <div id="sports"></div>
+  <button class="primary" onclick="saveSport()">保存</button>
+ </div>`;
 }
 
 function addSport(){
  const d=document.createElement("div");
- d.className="item";
- d.innerHTML='<input placeholder="运动"><input type="number" placeholder="kcal">';
+ d.innerHTML='<input placeholder="运动"><input placeholder="kcal">';
  sports.appendChild(d);
 }
 
 function saveSport(){
- ensure();
- let total=0;
- store[currentUser].records[date.value].sport=
- [...sports.children].map(s=>{
-  const kcal=Number(s.children[1].value||0);
-  total+=kcal;
-  return {name:s.children[0].value,kcal};
+ const d=document.getElementById("date").value;
+ ensure(d);
+ let t=0;
+ store[currentUser].records[d].sport=[...sports.children].map(s=>{
+  const k=Number(s.children[1].value||0);t+=k;
+  return {name:s.children[0].value,kcal:k};
  });
- store[currentUser].records[date.value].sportTotal=total;
- sportTotal.innerText="今日消耗："+total+" kcal";
- saveStore();
+ store[currentUser].records[d].sportTotal=t;
+ save();render();
 }
 
-function saveMember(){
- const n=memberName.value;
+function addMember(){
+ const n=name.value;
  if(!n)return;
  store[n]={profile:{
-  start:Number(startWeight.value),
-  target:Number(targetWeight.value)
+  start:Number(start.value),
+  target:Number(target.value)
  },records:{}};
- currentUser=n;
- userName.innerText=n;
- saveStore();showPage('weight');
-}
-
-function drawWeight(){
- const ctx=weightChart.getContext("2d");
- ctx.clearRect(0,0,300,300);
- if(!currentUser)return;
- const vals=Object.values(store[currentUser].records)
-  .map(d=>d[timeType].weight).filter(Boolean);
- if(!vals.length)return;
- ctx.beginPath();
- vals.forEach((v,i)=>{
-  const x=i*(300/vals.length);
-  const y=220-(v/Math.max(...vals))*180;
-  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
- });
- ctx.strokeStyle="#ff8fb1";
- ctx.lineWidth=3;
- ctx.stroke();
-}
-
-function drawFood(){
- const ctx=foodChart.getContext("2d");
- ctx.clearRect(0,0,300,300);
- const vals=Object.values(store[currentUser].records)
-  .slice(-30).map(d=>d.foodTotal||0);
- if(!vals.length)return;
- ctx.beginPath();
- vals.forEach((v,i)=>{
-  const x=i*(300/vals.length);
-  const y=220-(v/Math.max(...vals))*180;
-  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
- });
- ctx.strokeStyle="#67e8f9";
- ctx.lineWidth=3;
- ctx.stroke();
+ save();renderMembers();open(n,"weight");
 }
 </script>
 
