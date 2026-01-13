@@ -1,49 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>我们的体重本 💗</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #fff7fb;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    }
+
+    .app {
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    .title {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .weight {
+      font-size: 40px;
+      font-weight: bold;
+      color: #ff8fb1;
+    }
+
+    .tip {
+      color: #999;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
 <body>
-  <div id="app">
-
-    <!-- 页面 -->
-    <section class="page active" id="home">
-      <h1>今天也很棒 🌷</h1>
-      <div class="card">
-        <p class="label">今日体重</p>
-        <p class="big">65.2 kg</p>
-        <p class="hint">比昨天 -0.3 kg 🎉</p>
-      </div>
-    </section>
-
-    <section class="page" id="record">
-      <h1>记录一下 ✍️</h1>
-      <div class="card">
-        <input placeholder="体重 kg" />
-        <input placeholder="备注（可选）" />
-        <button>保存记录</button>
-      </div>
-    </section>
-
-    <section class="page" id="chart">
-      <h1>体重趋势 📈</h1>
-      <div class="card">
-        <p class="hint">连续记录 5 天啦 🔥</p>
-      </div>
-    </section>
-
-    <section class="page" id="setting">
-      <h1>设置 ⚙️</h1>
-      <div class="card">
-        <label>你的昵称</label>
-        <input placeholder="比如：小熊" />
-        <label>目标体重</label>
-        <input placeholder="例如 60" />
-      </div>
-    </section>
-
-    <!-- 底部导航 -->
-    <nav class="tabbar">
-      <button onclick="show('home')">🏠</button>
-      <button onclick="show('record')">✍️</button>
-      <button onclick="show('chart')">📊</button>
-      <button onclick="show('setting')">⚙️</button>
-    </nav>
-
+  <div class="app">
+    <div class="card">
+      <div class="title">今天也要温柔一点 🌷</div>
+      <div class="weight">65.2 kg</div>
+      <div class="tip">比昨天 -0.3 kg，好棒</div>
+    </div>
   </div>
 </body>
+</html>
